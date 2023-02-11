@@ -1,0 +1,11 @@
+---
+rclone_setup_tmp_dir: '/tmp'
+rclone_architectures:
+  amd64: amd64
+  x86_64: amd64
+  i386: "386"
+  armv6l: arm
+  armv7l: arm
+  aarch64: arm64
+  32-bit: "386"
+  64-bit: amd64

@@ -1,0 +1,13 @@
+---
+galaxy_info:
+  author: ybaumy
+  description: install whisper packages
+  license: AGPL
+  min_ansible_version: 2.1
+  platforms:
+  - name: Ubuntu
+    versions:
+      - all
+  categories:
+    - system
+dependencies: []

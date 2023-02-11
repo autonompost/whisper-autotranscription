@@ -1,0 +1,15 @@
+whisper_model_size: "small"
+whisper_retry_count: 3
+whisper_retry_delay: 10
+local_directory: "/home/ybaumy/git/whisper-autotranscription/ansible/files"
+local_complete_directory: "/home/ybaumy/git/whisper-autotranscription/ansible/files_complete"
+remote_directory: "/whisper"
+swapfile_size: "4096"
+swapfile_fallocate: True
+swapfile_path: "/swapfile-{{ swapfile_size }}"
+swapfile_swappiness: 60
+swapfile_vfs_cache_pressure: 100
+swapfile_sysctl:
+  "vm.swappiness": "{{ swapfile_swappiness }}"
+  "vm.vfs_cache_pressure": "{{ swapfile_vfs_cache_pressure }}"
+swapfile_delete: False

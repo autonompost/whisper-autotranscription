@@ -1,0 +1,39 @@
+- name: install required whisper packages
+  apt:
+    pkg:
+      - git
+      - python3
+      - python3-pip
+    state: latest
+    update_cache: true
+
+- name: install whisper python pip packages
+  ansible.builtin.pip:
+    name: "{{ item }}"
+  with_items:
+     - setuptools
+     - setuptools-rust
+     - git+https://github.com/openai/whisper.git
+
+- name: print if whisper model already exists
+  ansible.builtin.debug:
+    msg: "{{ ansible_env.HOME }}/.cache/whisper/{{ whisper_model_size }}.pt"
+  environment:
+    HOME: "{{ ansible_env.HOME }}"
+  when: whisper_model_size is defined
+
+- name: check if whisper model already exists
+  stat:
+    path: "{{ ansible_env.HOME }}/.cache/whisper/{{ whisper_model_size }}.pt"
+  environment:
+    HOME: "{{ ansible_env.HOME }}"
+  register: stat
+
+- name: download whisper model
+  when: stat.stat.exists == False
+  ansible.builtin.command: python3 -c "import whisper; print(whisper._download(whisper._MODELS['"{{ whisper_model_size }}"'], '$HOME/.cache/whisper', False))"
+  register: result
+  retries: "{{ whisper_retry_count }}"
+  delay: "{{ whisper_retry_delay }}"
+  until: result.rc == 0
+  failed_when: result.rc != 0

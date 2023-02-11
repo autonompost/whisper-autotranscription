@@ -1,0 +1,9 @@
+- hosts: all
+  become: yes
+  become_method: sudo
+  roles:
+    - role: sysupdate
+    - role: rclone
+    - role: whisper-packages
+    - role: swapspace
+    - role: copyfiles

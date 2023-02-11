@@ -1,0 +1,54 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: docker
+lint:
+  name: yamllint
+platforms:
+  - name: centos7
+    image: centos:7
+    pre_build_image: true
+    pull: true
+  - name: centos6
+    image: geerlingguy/docker-centos6-ansible
+    pre_build_image: true
+    pull: true
+  - name: opensuse
+    image: cmaiorano/opensuse-ansible
+    pre_build_image: true
+    pull: true
+  - name: ubuntu-bionic
+    image: geerlingguy/docker-ubuntu1804-ansible
+    pre_build_image: true
+    pull: true
+  - name: fedora
+    image: geerlingguy/docker-fedora29-ansible
+    pre_build_image: true
+    pull: true
+  - name: archlinux
+    image: cmaiorano/archlinux-ansible:latest
+    pre_build_image: true
+    pull: true
+provisioner:
+  name: ansible
+  log: true
+  lint:
+    name: ansible-lint
+scenario:
+  name: default
+  test_sequence:
+    - lint
+    - destroy
+    - dependency
+    - syntax
+    - create
+    - prepare
+    - converge
+    - side_effect
+    - verify
+    - destroy
+verifier:
+  name: testinfra
+  lint:
+    name: flake8

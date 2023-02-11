@@ -1,0 +1,47 @@
+#- name: Get file list
+#  command: "ls {{ local_directory }}"
+#  register: file_list
+#
+#- name: Distribute files evenly across hosts
+#  copy:
+#    src: "{{ local_directory }}/{{ item }}"
+#    dest: "{{ remote_directory }}/{{ item }}"
+#  loop: "{{ file_list.stdout_lines | chunk(file_list.stdout_lines | length / groups['group_name'].length, 'round_robin')[inventory_hostname_short] }}"
+#
+#
+
+- name: creates directory
+  file:
+    path: "{{ remote_directory }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0770
+
+- name: get directory list
+  command: "find {{ local_directory }}/ -type d"
+  register: directory_list
+
+- name: distribute files evenly across hosts
+  copy:
+    src: "{{ local_directory }}/{{ item }}"
+    dest: "{{ remote_directory }}/{{ item | basename }}"
+  loop: "{{ file_list.stdout_lines | chunk(file_list.stdout_lines | length / groups['group_name'].length, 'round_robin')[inventory_hostname_short] }}"
+
+- name: list files recursively in a directory
+  find:
+    paths: "{{ remote_directory }}"
+    file_type: file
+    recurse: yes
+  register: result
+
+- name: Display list of files
+  debug:
+    var: result.files
+
+- name: Copy remote directory to local folder
+  synchronize:
+    src: "{{ remote_directory }}"
+    dest: "{{ local_complete_directory }}"
+    mode: pull
+

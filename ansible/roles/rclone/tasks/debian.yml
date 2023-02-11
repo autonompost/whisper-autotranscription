@@ -1,0 +1,8 @@
+---
+- name: Install Rclone Debian/Ubuntu
+  apt:
+    update_cache: true
+    name: rclone
+- name: Set Supported
+  set_fact:
+    supported: true

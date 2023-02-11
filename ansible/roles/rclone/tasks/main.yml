@@ -1,0 +1,7 @@
+---
+- name: Setting supported to false
+  set_fact:
+    supported: false
+- name: Install rclone for Debian family
+  include_tasks: debian.yml
+  when: (ansible_distribution == 'Ubuntu' and ansible_distribution_major_version|int >= 18) or ansible_distribution == 'Debian'
