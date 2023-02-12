@@ -1,15 +1,4 @@
-#- name: Get file list
-#  command: "ls {{ local_directory }}"
-#  register: file_list
-#
-#- name: Distribute files evenly across hosts
-#  copy:
-#    src: "{{ local_directory }}/{{ item }}"
-#    dest: "{{ remote_directory }}/{{ item }}"
-#  loop: "{{ file_list.stdout_lines | chunk(file_list.stdout_lines | length / groups['group_name'].length, 'round_robin')[inventory_hostname_short] }}"
-#
-#
-
+---
 - name: creates directory
   file:
     path: "{{ remote_directory }}"
@@ -18,30 +7,28 @@
     group: root
     mode: 0770
 
-- name: get directory list
-  command: "find {{ local_directory }}/ -type d"
-  register: directory_list
+- name: Get a list of unique subdirectories
+  ansible.builtin.command: find "{{ local_upload_directory }}"/ -maxdepth 2 -mindepth 1 -type d 
+  register: subdirs
+  delegate_to: localhost
+  become: false
 
-- name: distribute files evenly across hosts
+- name: print subdirs
+  ansible.builtin.debug:
+    msg: "{{ item }}"
+  loop: "{{ subdirs.stdout_lines }}"
+
+- name: Get remote hostname
+  set_fact:
+    remote_hostname: "{{ ansible_hostname }}"
+
+- name: print remote_hostname
+  ansible.builtin.debug:
+    msg: "{{ remote_hostname }}"
+
+- name: upload only the directories matching hostname
   copy:
-    src: "{{ local_directory }}/{{ item }}"
-    dest: "{{ remote_directory }}/{{ item | basename }}"
-  loop: "{{ file_list.stdout_lines | chunk(file_list.stdout_lines | length / groups['group_name'].length, 'round_robin')[inventory_hostname_short] }}"
-
-- name: list files recursively in a directory
-  find:
-    paths: "{{ remote_directory }}"
-    file_type: file
-    recurse: yes
-  register: result
-
-- name: Display list of files
-  debug:
-    var: result.files
-
-- name: Copy remote directory to local folder
-  synchronize:
-    src: "{{ remote_directory }}"
-    dest: "{{ local_complete_directory }}"
-    mode: pull
-
+    src: "{{ item }}"
+    dest: "{{ remote_directory }}"
+  when: "remote_hostname in item"
+  loop: "{{ subdirs.stdout_lines }}"

@@ -2,6 +2,7 @@ whisper_model_size: "small"
 whisper_retry_count: 3
 whisper_retry_delay: 10
 local_directory: "/home/ybaumy/git/whisper-autotranscription/ansible/files"
+local_upload_directory: "/home/ybaumy/git/whisper-autotranscription/ansible/files/upload"
 local_complete_directory: "/home/ybaumy/git/whisper-autotranscription/ansible/files_complete"
 remote_directory: "/whisper"
 swapfile_size: "4096"

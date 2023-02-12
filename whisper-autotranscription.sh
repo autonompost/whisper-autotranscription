@@ -11,43 +11,43 @@ __checkreq() {
   [ -x "$(command -v terraform)" ] || { echo "Error: terraform is not installed or not executable"; exit 1; }
 }
 
+__sshkeygen() {
+  if [ ! -f "$(pwd)/id_rsa" ]
+  then
+    ssh-keygen -t rsa -b 4096 -N "" -f $(pwd)/id_rsa
+  fi
+}
+
 # distribute files for ansible upload
 __distributefiles() {
-  declare -a extensions=( mp3 wav ogg )
   [ ! -d $dst_filedir ] && mkdir -p $dst_filedir
   if (( $NUMVMS > 1 ))
   then
-  echo foo
-    counter=1
-    OIFS="$IFS"
-    IFS=$'\n'
+    readarray -t files < <(find "$src_filedir" -type f | grep -E "*.mp3|*.wav")
+    files_per_dir=$(( ${#files[@]} / $NUMVMS ))
+    if [ $(( ${#files[@]} % $NUMVMS )) -gt 0 ]; then
+      files_per_dir=$(( files_per_dir + 1 ))
+    fi
 
-    files=$(find "$src_filedir" -type f -name "*.extension")
-
-    for ext in "${extensions[@]}"
+    split -l $files_per_dir -d -a 1 <(printf '%s\n' "${files[@]}") xaa
+    
+    find . -name "xaa*" -print0 | while IFS= read -r -d '' file
     do
-      files=$(find "$src_filedir" -type f -name "*.$ext" -print)
+      sub_dir="${dst_filedir}/`echo $file | sed 's/\.\/xaa//'`/"
+      echo "subdir $sub_dir"
 
-      for file in $files
-      do
-        target_dir="$dst_filedir/$((counter / num))"
+      if [ ! -d "$sub_dir" ]
+      then
+        mkdir -p "$sub_dir"
+      fi
 
-        if [ ! -d "$target_filedir" ]
-        then
-          mkdir "$target_filedir"
-        fi
-
-        if [ ! -f "$target_filedir$(basename "$file")" ]
-        then
-          echo "copying file: ${file}"
-          cp "$file" "$target_filedir$(basename "$file")" || { echo "Error: could not copy file to ${target_filedir}"; exit 1; }
-        else
-          echo "file exists already: ${file}"
-        fi
-        counter=$((counter + 1))
-      done
+      while read line; do
+        printf '%s\n' "$line"
+        cp "${line}" "$sub_dir/" || { echo "Error: could not copy file to ${sub_dir}"; exit 1; }
+      done < "$file"
+      [ -f "$file" ] && rm -f $file
     done
-    IFS="$OIFS"
+
   else
     target_filedir="${dst_filedir}/1/"
     echo "target_filedir: ${target_filedir}"
@@ -81,19 +81,49 @@ __cleanup() {
   dirtodelete=$(find "${dst_filedir}" -maxdepth 1 -mindepth 1 -type d)
   for dir in $dirtodelete
   do
-    [ -d $dir ] && rm -r $dir
+    [ -d $dir ] && rm -rf $dir
   done
+
+  [ -f "${config_dir}/${tfvarsnumvms}" ] && rm -f ${config_dir}/${tfvarsnumvms}
 }
 
 __doobsidian() {
  echo "do something"
 }
 
-__dotfapply() {
- echo "do something"
-}
-__dotfdestroy() {
- echo "do something"
+__doterraform() {
+  tfmode=$1
+
+  # copy template to config for the terraform runtime
+  cp "$numvmstemplate" ${config_dir}/${tfvarsnumvms} || { echo "Error: could not copy ${tfvarsnumvms} to ${config_dir}"; exit 1; }
+  sed -i -e "s/NUMVMS/$NUMVMS/" ${config_dir}/${tfvarsnumvms}
+
+  case $cloudprovider in
+    hetzner)
+      cd $(pwd)/$cloudprovider || { echo "Error: could not chdir to ${cloudprovider}"; exit 1; }
+      terraform init
+      terraform $tfmode -auto-approve -var="hcloud_token=${HCLOUD_TOKEN}" -var-file="../config/variables.tfvars"
+      ;;
+    linode)
+      cd $(pwd)/$cloudprovider || { echo "Error: could not chdir to ${cloudprovider}"; exit 1; }
+      terraform init
+      terraform $tfmode -auto-approve -var-file="../config/variables.tfvars"
+      ;;
+    digitalocean)
+      cd $(pwd)/$cloudprovider || { echo "Error: could not chdir to ${cloudprovider}"; exit 1; }
+      terraform init
+      terraform $tfmode -auto-approve -var="do_token=${DO_TOKEN}" -var-file="../config/variables.tfvars"
+      ;;
+    ovh)
+      source $(pwd)/config/openrc.sh || { echo "Error: could source openrc.sh openstack config for ${cloudprovider}"; exit 1; }
+      cd $(pwd)/cloudprovider || { echo "Error: could not chdir to ${cloudprovider}"; exit 1; }
+      echo "do something"
+      ;;
+    *)
+      echo "not supported cloud provider: ${cloudprovider}"
+      exit 1
+      ;;
+  esac
 }
 
 __doansible() {
@@ -105,11 +135,11 @@ __main() {
   [ -z $NUMVMS ] && NUMVMS=1
   __checkreq
   __distributefiles
-  __dotfapply
+  __doterraform apply
   __doansible
-  __doobsidian
+  [ $OBSIDIAN = "true" ] && __doobsidian
   [ $CLEANUP = "true" ] && __cleanup
-  __dotfdestroy
+  [ $TFDESTROY = "true" ] && __doterraform destroy
 }
 
 __show_help() {
