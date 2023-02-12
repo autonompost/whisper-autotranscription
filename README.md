@@ -2,22 +2,23 @@
 
 ## Version 1
 
-- [ ] Provision single VM
-- [ ] Supported Cloud Platforms
-	- [ ] Hetzner Cloud
-	- [ ] Linode (GPU)
-	- [ ] OVH (GPU)
-	- [ ] Digitalocean
-- [ ] Install Whisper via Pip
-- [ ] Upload files from local filsystem
-- [ ] Use config parameter to specify model type
-- [ ] Autodetect language
-- [ ] Upload completed files via rclone
+- [x] Provision multiple VMs for parallel processing
+- [x] Supported Cloud Platforms
+	- [x] Hetzner Cloud
+	- [x] Linode (GPU)
+	- [x] OVH (GPU)
+	- [x] Digitalocean
+- [x] Use OpenAI Whisper
+- [x] Upload/Download files from/to local filsystem
+- [x] Autodetect language
+- [ ] GPU instance support with Nvidia Cuda
 
 ## Version 2
 
-- [ ] Terraform Modules for multiple VMs for all supported cloud providers
-- [ ] Use Docker Whisper Web Image https://github.com/ahmetoner/whisper-asr-webservice
+- [ ] Obsidian audio-files plugin support
+- [ ] automatic translation to specified language for transcripts
+- [ ] use rclone directly on the remote system without any local files
+- [ ] use ChatGPT to create summaries for transcripts
 - [ ] tbd
 
 The Terraform part is based on the [Complete and Official Documentation](https://github.com/ovh/docs/blob/develop/pages/platform/public-cloud/how_to_use_terraform/guide.en-us.md)
