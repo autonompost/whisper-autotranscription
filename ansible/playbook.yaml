@@ -2,8 +2,9 @@
   become: yes
   become_method: sudo
   roles:
-    #- role: sysupdate
-    #- role: rclone
-    #- role: whisper-packages
-    #- role: swapspace
+    - role: sysupdate
+    - role: rclone
+    - role: whisper-packages
+    - role: swapspace
     - role: copyfiles
+    - role: whisper-transcribe

@@ -1,0 +1,16 @@
+---
+galaxy_info:
+  author: autonompost
+  description: transcribe all audio files in a directory
+  license: AGPL
+  min_ansible_version: 2.1
+  platforms:
+  - name: Ubuntu
+    versions:
+      - all
+  - name: Debian
+    versions:
+      - all
+  categories:
+    - system
+dependencies: []

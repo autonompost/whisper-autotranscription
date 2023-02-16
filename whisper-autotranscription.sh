@@ -25,7 +25,8 @@ __distributefiles() {
   then
     readarray -t files < <(find "$src_filedir" -type f | grep -E "*.mp3|*.wav")
     files_per_dir=$(( ${#files[@]} / $NUMVMS ))
-    if [ $(( ${#files[@]} % $NUMVMS )) -gt 0 ]; then
+    if [ $(( ${#files[@]} % $NUMVMS )) -gt 0 ]
+    then
       files_per_dir=$(( files_per_dir + 1 ))
     fi
 
@@ -41,7 +42,8 @@ __distributefiles() {
         mkdir -p "$sub_dir"
       fi
 
-      while read line; do
+      while read line
+      do
         printf '%s\n' "$line"
         cp "${line}" "$sub_dir/" || { echo "Error: could not copy file to ${sub_dir}"; exit 1; }
       done < "$file"

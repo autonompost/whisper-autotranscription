@@ -11,7 +11,7 @@ number_vms = 2
 region = "fsn1"
 ssh_public_key_name = "whisper-ssh-key"
 instance_name = "vm-whisper"
-instance_type = "cpx31"
+instance_type = "ccx21"
 os_image = "ubuntu-22.04"
 # linode 
 #number_vms = 2

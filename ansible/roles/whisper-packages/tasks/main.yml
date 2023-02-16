@@ -3,6 +3,7 @@
     pkg:
       - git
       - python3
+      - ffmpeg
       - python3-pip
     state: latest
     update_cache: true
