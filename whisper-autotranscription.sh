@@ -31,7 +31,7 @@ __distributefiles() {
     fi
 
     split -l $files_per_dir -d -a 1 <(printf '%s\n' "${files[@]}") xaa
-    
+
     find . -name "xaa*" -print0 | while IFS= read -r -d '' file
     do
       sub_dir="${dst_filedir}/`echo $file | sed 's/\.\/xaa//'`/"

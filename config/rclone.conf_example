@@ -1,6 +1,6 @@
 [cloudshare]
 #type = webdav
-#url = 
+#url =
 #vendor = nextcloud
 #user =
 #pass =

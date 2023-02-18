@@ -13,7 +13,7 @@ ssh_public_key_name = "whisper-ssh-key"
 instance_name = "vm-whisper"
 instance_type = "ccx21"
 os_image = "ubuntu-22.04"
-# linode 
+# linode
 #number_vms = 2
 #region = "eu-central"
 #ssh_public_key_name = "whisper-ssh-key"

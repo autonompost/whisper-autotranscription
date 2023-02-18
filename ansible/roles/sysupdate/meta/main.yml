@@ -1,7 +1,7 @@
 ---
 galaxy_info:
   author: ybaumy
-  description: install docker 
+  description: install docker
   license: AGPL
   min_ansible_version: 2.1
   platforms:

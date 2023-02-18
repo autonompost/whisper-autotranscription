@@ -13,7 +13,7 @@
 
 - name: list files remote files in whisper directory
   command: "ls -1 {{ remote_directory }}/{{ remote_hostname }}/"
-  register: files 
+  register: files
 
 - name: transcribe all audio files
   command: "whisper {{ remote_directory }}/{{ remote_hostname }}/{{ item }} --model {{ whisper_model_size }} --output_dir {{ remote_output_directory }}"
@@ -23,4 +23,3 @@
   register: result
   until: result.finished
   retries: 3
-
