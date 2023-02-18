@@ -8,6 +8,7 @@ __checkreq() {
   [ -f $FILE ] || { echo "Error: config file ${FILE} cannot be found or is not readable"; exit 1; }
   source $FILE
   [ -x "$(command -v ansible)" ] || { echo "Error: ansible is not installed or not executable"; exit 1; }
+  [ -x "$(command -v ansible-playbook)" ] || { echo "Error: ansible-playbook is not installed or not executable"; exit 1; }
   [ -x "$(command -v terraform)" ] || { echo "Error: terraform is not installed or not executable"; exit 1; }
 }
 
@@ -144,7 +145,8 @@ __doterraform() {
     ovh)
       source $(pwd)/config/openrc.sh || { echo "Error: could source openrc.sh openstack config for ${cloudprovider}"; exit 1; }
       cd $(pwd)/cloudprovider || { echo "Error: could not chdir to ${cloudprovider}"; exit 1; }
-      echo "do something"
+      terraform init
+      terraform $tfmode -auto-approve -var="do_token=${DO_TOKEN}" -var-file="../config/variables.tfvars"
       ;;
     *)
       echo "not supported cloud provider: ${cloudprovider}"
@@ -154,7 +156,8 @@ __doterraform() {
 }
 
 __doansible() {
- echo "do something"
+  export ANSIBLE_HOST_KEY_CHECKING=False
+  [ -d $(pwd)/ansible ] && ansible-playbook -i hosts.cfg playbook.yaml
 }
 
 __main() {
@@ -163,6 +166,7 @@ __main() {
   __checkreq
   __distributefiles
   __doterraform apply
+  __dogetcpu
   __doansible
   [ $OBSIDIAN = "true" ] && __doobsidian
   [ $CLEANUP = "true" ] && __cleanup
