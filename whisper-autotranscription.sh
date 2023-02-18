@@ -93,6 +93,31 @@ __doobsidian() {
  echo "do something"
 }
 
+__dogetcpu() {
+  # get the cpu for whisper threading information from the API of the cloudprovider being used
+  case $cloudprovider in
+    hetzner)
+      THREADS=$(curl -s -H "Authorization: Bearer ${HCLOUD_TOKEN}" "https://api.hetzner.cloud/v1/server_types" \
+        | jq -r '.server_types[] | select(.name == "${instance_type}") | .cores')
+      ;;
+    linode)
+      THREADS=$(curl -s -H "Authorization: Bearer ${LINODE_TOKEN}" "https://api.linode.com/v4/linode/types" \
+        | jq -r ".data[] | select(.id == \"${instance_type}\") | .vcpus")
+      ;;
+    digitalocean)
+      THREADS=$(curl -s -X GET -H "Content-Type: application/json" -H "Authorization: Bearer ${DO_TOKEN}" \
+        "https://api.digitalocean.com/v2/sizes?per_page=200" \
+        | jq -r ".sizes[] | select(.slug == \"${instance_type}\") | .vcpus")
+      ;;
+    ovh)
+      THREADS=$(openstack flavor list -f json | jq '.[] | select(.Name == "${instance_type}") | .VCPUs')
+      ;;
+    *)
+      echo "do something"
+      ;;
+  esac
+}
+
 __doterraform() {
   tfmode=$1
 

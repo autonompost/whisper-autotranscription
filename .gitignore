@@ -10,3 +10,4 @@ ansible/hosts.cfg
 ansible/files/**
 files/**
 files_complete/*
+test.sh
