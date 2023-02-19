@@ -8,3 +8,4 @@
     - role: swapspace
     - role: copyfiles
     - role: whisper-transcribe
+    - role: downloadfiles

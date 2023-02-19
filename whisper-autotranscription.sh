@@ -12,30 +12,40 @@ __checkreq() {
   [ -x "$(command -v terraform)" ] || { echo "Error: terraform is not installed or not executable"; exit 1; }
 }
 
+__enablelog() {
+  echo "do something"
+}
+
 __sshkeygen() {
   if [ ! -f "$(pwd)/id_rsa" ]
   then
     ssh-keygen -t rsa -b 4096 -N "" -f $(pwd)/id_rsa
+  elif [ $SSH_CREATE_KEY_FORCE = "true" ]
+  then
+    [ -f $(pwd)/id_rsa ] && rm -f $(pwd)/id_rsa
+    ssh-keygen -t rsa -b 4096 -N "" -f $(pwd)/id_rsa
+  else
+    echo "__sshkeygen: I should not be here"
   fi
 }
 
 # distribute files for ansible upload
 __distributefiles() {
-  [ ! -d $dst_filedir ] && mkdir -p $dst_filedir
+  [ ! -d $DST_DIR ] && mkdir -p $DST_DIR
   if (( $NUMVMS > 1 ))
   then
-    readarray -t files < <(find "$src_filedir" -type f | grep -E "*.mp3|*.wav")
+    readarray -t files < <(find "$SRC_DIR" -type f | grep -E "*.mp3|*.wav")
     files_per_dir=$(( ${#files[@]} / $NUMVMS ))
     if [ $(( ${#files[@]} % $NUMVMS )) -gt 0 ]
     then
       files_per_dir=$(( files_per_dir + 1 ))
     fi
 
-    split -l $files_per_dir -d -a 1 <(printf '%s\n' "${files[@]}") xaa
+    split -l $files_per_dir -d -a 1 <(printf '%s\n' "${files[@]}") vm-whisper-
 
-    find . -name "xaa*" -print0 | while IFS= read -r -d '' file
+    find . -name "vm-whisper-*" -print0 | while IFS= read -r -d '' file
     do
-      sub_dir="${dst_filedir}/`echo $file | sed 's/\.\/xaa//'`/"
+      sub_dir="${DST_DIR}/${file}"
       echo "subdir $sub_dir"
 
       if [ ! -d "$sub_dir" ]
@@ -52,7 +62,7 @@ __distributefiles() {
     done
 
   else
-    target_filedir="${dst_filedir}/1/"
+    target_filedir="${DST_DIR}/vm-whisper-0/"
     echo "target_filedir: ${target_filedir}"
 
     OIFS="$IFS"
@@ -60,7 +70,7 @@ __distributefiles() {
 
     for ext in "${extensions[@]}"
     do
-      files=$(find "$src_filedir" -type f -name "*.$ext" -print)
+      files=$(find "$SRC_DIR" -type f -name "*.$ext" -print)
 
       [ ! -d $target_filedir ] && mkdir $target_filedir
       for file in $files
@@ -81,13 +91,13 @@ __distributefiles() {
 }
 
 __cleanup() {
-  dirtodelete=$(find "${dst_filedir}" -maxdepth 1 -mindepth 1 -type d)
+  dirtodelete=$(find "${DST_DIR}" -maxdepth 1 -mindepth 1 -type d)
   for dir in $dirtodelete
   do
     [ -d $dir ] && rm -rf $dir
   done
 
-  [ -f "${config_dir}/${tfvarsnumvms}" ] && rm -f ${config_dir}/${tfvarsnumvms}
+  [ -f "${CONFIG_DIR}/${tfvarsnumvms}" ] && rm -f ${CONFIG_DIR}/${tfvarsnumvms}
 }
 
 __doobsidian() {
@@ -95,8 +105,8 @@ __doobsidian() {
 }
 
 __dogetcpu() {
-  # get the cpu for whisper threading information from the API of the cloudprovider being used
-  case $cloudprovider in
+  # get the cpu for whisper threading information from the API of the CLOUDPROVIDER being used
+  case $CLOUDPROVIDER in
     hetzner)
       THREADS=$(curl -s -H "Authorization: Bearer ${HCLOUD_TOKEN}" "https://api.hetzner.cloud/v1/server_types" \
         | jq -r '.server_types[] | select(.name == "${instance_type}") | .cores')
@@ -123,33 +133,33 @@ __doterraform() {
   tfmode=$1
 
   # copy template to config for the terraform runtime
-  cp "$numvmstemplate" ${config_dir}/${tfvarsnumvms} || { echo "Error: could not copy ${tfvarsnumvms} to ${config_dir}"; exit 1; }
-  sed -i -e "s/NUMVMS/$NUMVMS/" ${config_dir}/${tfvarsnumvms}
+  cp "$numvmstemplate" ${CONFIG_DIR}/${tfvarsnumvms} || { echo "Error: could not copy ${tfvarsnumvms} to ${CONFIG_DIR}"; exit 1; }
+  sed -i -e "s/NUMVMS/$NUMVMS/" ${CONFIG_DIR}/${tfvarsnumvms}
 
-  case $cloudprovider in
+  case $CLOUDPROVIDER in
     hetzner)
-      cd $(pwd)/$cloudprovider || { echo "Error: could not chdir to ${cloudprovider}"; exit 1; }
+      cd $(pwd)/$CLOUDPROVIDER || { echo "Error: could not chdir to ${CLOUDPROVIDER}"; exit 1; }
       terraform init
-      terraform $tfmode -auto-approve -var="hcloud_token=${HCLOUD_TOKEN}" -var-file="../config/variables.tfvars"
+      terraform $tfmode -auto-approve -var="hcloud_token=${HCLOUD_TOKEN}" -var-file="${CONFIG_DIR}/variables.tfvars"
       ;;
     linode)
-      cd $(pwd)/$cloudprovider || { echo "Error: could not chdir to ${cloudprovider}"; exit 1; }
+      cd $(pwd)/$CLOUDPROVIDER || { echo "Error: could not chdir to ${CLOUDPROVIDER}"; exit 1; }
       terraform init
-      terraform $tfmode -auto-approve -var-file="../config/variables.tfvars"
+      terraform $tfmode -auto-approve -var-file="${CONFIG_DIR}/variables.tfvars"
       ;;
     digitalocean)
-      cd $(pwd)/$cloudprovider || { echo "Error: could not chdir to ${cloudprovider}"; exit 1; }
+      cd $(pwd)/$CLOUDPROVIDER || { echo "Error: could not chdir to ${CLOUDPROVIDER}"; exit 1; }
       terraform init
-      terraform $tfmode -auto-approve -var="do_token=${DO_TOKEN}" -var-file="../config/variables.tfvars"
+      terraform $tfmode -auto-approve -var="do_token=${DO_TOKEN}" -var-file="${CONFIG_DIR}/variables.tfvars"
       ;;
     ovh)
-      source $(pwd)/config/openrc.sh || { echo "Error: could source openrc.sh openstack config for ${cloudprovider}"; exit 1; }
-      cd $(pwd)/$cloudprovider || { echo "Error: could not chdir to ${cloudprovider}"; exit 1; }
+      source ${CONFIG_DIR}/openrc.sh || { echo "Error: could source openrc.sh openstack config for ${CLOUDPROVIDER}"; exit 1; }
+      cd $(pwd)/$CLOUDPROVIDER || { echo "Error: could not chdir to ${CLOUDPROVIDER}"; exit 1; }
       terraform init
-      terraform $tfmode -auto-approve -var="do_token=${DO_TOKEN}" -var-file="../config/variables.tfvars"
+      terraform $tfmode -auto-approve -var="do_token=${DO_TOKEN}" -var-file="${CONFIG_DIR}/variables.tfvars"
       ;;
     *)
-      echo "not supported cloud provider: ${cloudprovider}"
+      echo "not supported cloud provider: ${CLOUDPROVIDER}"
       exit 1
       ;;
   esac
@@ -161,13 +171,15 @@ __doansible() {
 }
 
 __main() {
+  [ $LOGGING = "true" ] && __enablelog
   [ -z $FILE ] && FILE="$(pwd)/config/config.sh"
   [ -z $NUMVMS ] && NUMVMS=1
   __checkreq
+  [ $SSH_CREATE_KEY = "true" ] && __sshkeygen
   __distributefiles
   __doterraform apply
   __dogetcpu
-  __doansible
+  [ $ANSIBLE = "true" ] && __doansible
   [ $OBSIDIAN = "true" ] && __doobsidian
   [ $CLEANUP = "true" ] && __cleanup
   [ $TFDESTROY = "true" ] && __doterraform destroy

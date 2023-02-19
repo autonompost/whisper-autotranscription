@@ -3,6 +3,7 @@ whisper_retry_count: 3
 whisper_retry_delay: 10
 local_directory: "/home/ybaumy/git/whisper-autotranscription/files"
 local_upload_directory: "/home/ybaumy/git/whisper-autotranscription/files/upload"
+local_download_directory: "/home/ybaumy/git/whisper-autotranscription/files/download"
 remote_directory: "/whisper"
 remote_output_directory: "/whisper/output"
 swapfile_size: "4096"
