@@ -144,7 +144,7 @@ __doterraform() {
       ;;
     ovh)
       source $(pwd)/config/openrc.sh || { echo "Error: could source openrc.sh openstack config for ${cloudprovider}"; exit 1; }
-      cd $(pwd)/cloudprovider || { echo "Error: could not chdir to ${cloudprovider}"; exit 1; }
+      cd $(pwd)/$cloudprovider || { echo "Error: could not chdir to ${cloudprovider}"; exit 1; }
       terraform init
       terraform $tfmode -auto-approve -var="do_token=${DO_TOKEN}" -var-file="../config/variables.tfvars"
       ;;
@@ -161,7 +161,7 @@ __doansible() {
 }
 
 __main() {
-  [ -z $FILE ] && FILE="config/config.sh"
+  [ -z $FILE ] && FILE="$(pwd)/config/config.sh"
   [ -z $NUMVMS ] && NUMVMS=1
   __checkreq
   __distributefiles

@@ -4,6 +4,7 @@ id_rsa*
 */*.tfstate
 */*.tfstate*
 config/config.sh
+config/secrets.sh
 config/openrc.sh
 config/rclone.conf
 ansible/hosts.cfg
