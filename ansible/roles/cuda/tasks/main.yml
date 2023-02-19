@@ -1,0 +1,39 @@
+---
+- name: download nvidia cuda keyring 
+  get_url:
+    url: "https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.0-1_all.deb"
+    dest: /tmp
+
+- name: remove deprecated cuda apt key
+  apt_key:
+    id: 7fa2af80
+    state: absent
+
+- name: install cuda keyring dpkg package
+  dpkg:
+    src: /tmp/cuda-keyring_1.0-1_all.deb
+    state: present
+
+- name: apt update cache
+  apt:
+    update_cache: yes
+
+- name: install required cuda packages
+  apt:
+    pkg:
+      - cuda
+    state: latest
+    update_cache: true
+
+- name: Check if a reboot is required.
+  ansible.builtin.stat:
+    path: /var/run/reboot-required
+    get_md5: no
+  register: reboot_required_file
+
+- name: Reboot the server (if required).
+  ansible.builtin.reboot:
+  when: reboot_required_file.stat.exists == true
+
+
+

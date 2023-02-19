@@ -1,0 +1,16 @@
+---
+galaxy_info:
+  author: autonompost
+  description: install nvidia cuda drivers
+  license: AGPL
+  min_ansible_version: 2.1
+  platforms:
+  - name: Ubuntu
+    versions:
+      - all
+  - name: Debian
+    versions:
+      - all
+  categories:
+    - system
+dependencies: []

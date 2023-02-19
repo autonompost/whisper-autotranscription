@@ -5,11 +5,16 @@
 
 # check requirements
 __checkreq() {
-  [ -f $FILE ] || { echo "Error: config file ${FILE} cannot be found or is not readable"; exit 1; }
-  source $FILE
-  [ -x "$(command -v ansible)" ] || { echo "Error: ansible is not installed or not executable"; exit 1; }
-  [ -x "$(command -v ansible-playbook)" ] || { echo "Error: ansible-playbook is not installed or not executable"; exit 1; }
-  [ -x "$(command -v terraform)" ] || { echo "Error: terraform is not installed or not executable"; exit 1; }
+  [ -f $CONFIGFILE ] || { echo "Error: config file ${CONFIGFILE} cannot be found or is not readable"; exit 1; }
+  source $CONFIGFILE
+  [ -f $SECRETSFILE ] || { echo "Error: config file ${SECRETSFILE} cannot be found or is not readable"; exit 1; }
+  source $SECRETSFILE
+  [ -x "$(command -v ansible)" ] \
+    || { echo "Error: ansible is not installed or not executable"; exit 1; }
+  [ -x "$(command -v ansible-playbook)" ] \
+    || { echo "Error: ansible-playbook is not installed or not executable"; exit 1; }
+  [ -x "$(command -v terraform)" ] \
+    || { echo "Error: terraform is not installed or not executable"; exit 1; }
 }
 
 __enablelog() {
@@ -17,15 +22,13 @@ __enablelog() {
 }
 
 __sshkeygen() {
-  if [ ! -f "$(pwd)/id_rsa" ]
+  if [ ! -f "${BASEDIR}/id_rsa" ]
   then
     ssh-keygen -t rsa -b 4096 -N "" -f $(pwd)/id_rsa
   elif [ $SSH_CREATE_KEY_FORCE = "true" ]
   then
-    [ -f $(pwd)/id_rsa ] && rm -f $(pwd)/id_rsa
+    [ -f ${BASEDIR}/id_rsa ] && rm -f $(pwd)/id_rsa
     ssh-keygen -t rsa -b 4096 -N "" -f $(pwd)/id_rsa
-  else
-    echo "__sshkeygen: I should not be here"
   fi
 }
 
@@ -56,7 +59,8 @@ __distributefiles() {
       while read line
       do
         printf '%s\n' "$line"
-        cp "${line}" "$sub_dir/" || { echo "Error: could not copy file to ${sub_dir}"; exit 1; }
+        cp "${line}" "$sub_dir/" \
+          || { echo "Error: could not copy file to ${sub_dir}"; exit 1; }
       done < "$file"
       [ -f "$file" ] && rm -f $file
     done
@@ -79,14 +83,14 @@ __distributefiles() {
         if [ ! -f "$target_filedir$(basename "$file")" ]
         then
           echo "copying file: ${file}"
-          cp "$file" "$target_filedir$(basename "$file")" || { echo "Error: could not copy file to ${target_filedir}"; exit 1; }
+          cp "$file" "$target_filedir$(basename "$file")" \
+            || { echo "Error: could not copy file to ${target_filedir}"; exit 1; }
         else
           echo "file exists already: ${file}"
         fi
       done
     done
     IFS="$OIFS"
-  echo bar
   fi
 }
 
@@ -97,7 +101,8 @@ __cleanup() {
     [ -d $dir ] && rm -rf $dir
   done
 
-  [ -f "${CONFIG_DIR}/${tfvarsnumvms}" ] && rm -f ${CONFIG_DIR}/${tfvarsnumvms}
+  [ -f "${CONFIG_DIR}/${TFVARSNUMVMS}" ] && rm -f ${CONFIG_DIR}/${TFVARSNUMVMS}
+  [ -f "${BASEDIR}/ansible/group_vars/all/${ANSIBLETEMPLATE}" ] && rm -f ${BASEDIR}/ansible/group_vars/all/${ANSIBLETEMPLATE}
 }
 
 __doobsidian() {
@@ -106,57 +111,73 @@ __doobsidian() {
 
 __dogetcpu() {
   # get the cpu for whisper threading information from the API of the CLOUDPROVIDER being used
+  cp "${BASEDIR}/templates/${ANSIBLETEMPLATE}" ${BASEDIR}/ansible/group_vars/all/${ANSIBLETEMPLATE} \
+    || { echo "Error: could not copy ${ANSIBLETEMPLATE} to ${BASEDIR}/ansible/group_vars/all"; exit 1; }
+
+  # in order to only have the instance_type variable in the tfvars file, get it here as shell var
+  instance_type=$(grep -E "^instance_type" ${TFVARS} | perl -pe 's/^(instance_type.*)"(.*)"/$2/')
+
+  [ ! -z $instance_type ] \
+    || { echo "__dogetcpu: ERROR - instance_type is empty"; exit 1; }
+
   case $CLOUDPROVIDER in
     hetzner)
+      set -x
       THREADS=$(curl -s -H "Authorization: Bearer ${HCLOUD_TOKEN}" "https://api.hetzner.cloud/v1/server_types" \
-        | jq -r '.server_types[] | select(.name == "${instance_type}") | .cores')
+        | jq -r --arg i "${instance_type}" '.server_types[] | select(.name == $i) | .cores')
+      set +x
       ;;
     linode)
       THREADS=$(curl -s -H "Authorization: Bearer ${LINODE_TOKEN}" "https://api.linode.com/v4/linode/types" \
-        | jq -r ".data[] | select(.id == \"${instance_type}\") | .vcpus")
+        | jq -r --arg i "${instance_type}" ".data[] | select(.id == $i) | .vcpus")
       ;;
     digitalocean)
       THREADS=$(curl -s -X GET -H "Content-Type: application/json" -H "Authorization: Bearer ${DO_TOKEN}" \
         "https://api.digitalocean.com/v2/sizes?per_page=200" \
-        | jq -r ".sizes[] | select(.slug == \"${instance_type}\") | .vcpus")
+        | jq -r --arg i "${instance_type}" ".sizes[] | select(.slug == $i) | .vcpus")
       ;;
     ovh)
-      THREADS=$(openstack flavor list -f json | jq '.[] | select(.Name == "${instance_type}") | .VCPUs')
+      THREADS=$(openstack flavor list -f json | jq -r --arg i "${instance_type}" '.[] | select(.Name == $i) | .VCPUs')
       ;;
     *)
-      echo "do something"
+      echo "__dogetcpu: I should never be here" && exit 1
       ;;
   esac
+  sed -i -e "s/THREADS/$THREADS/" ${BASEDIR}/ansible/group_vars/all/$ANSIBLETEMPLATE \
+    || { echo "Error: could not change THREADS in ${ANSIBLETEMPLATE} to ${THREADS}"; exit 1; }
+  echo "threads: ${THREADS}"
 }
 
 __doterraform() {
   tfmode=$1
 
   # copy template to config for the terraform runtime
-  cp "$numvmstemplate" ${CONFIG_DIR}/${tfvarsnumvms} || { echo "Error: could not copy ${tfvarsnumvms} to ${CONFIG_DIR}"; exit 1; }
-  sed -i -e "s/NUMVMS/$NUMVMS/" ${CONFIG_DIR}/${tfvarsnumvms}
+  cp "$TFTEMPLATE" ${CONFIG_DIR}/${TFVARSNUMVMS} \
+    || { echo "Error: could not copy ${TFVARSNUMVMS} to ${CONFIG_DIR}"; exit 1; }
+  sed -i -e "s/NUMVMS/$NUMVMS/" ${CONFIG_DIR}/${TFVARSNUMVMS}
 
   case $CLOUDPROVIDER in
     hetzner)
-      cd $(pwd)/$CLOUDPROVIDER || { echo "Error: could not chdir to ${CLOUDPROVIDER}"; exit 1; }
+      cd ${BASEDIR}/$CLOUDPROVIDER || { echo "Error: could not chdir to ${CLOUDPROVIDER}"; exit 1; }
       terraform init
-      terraform $tfmode -auto-approve -var="hcloud_token=${HCLOUD_TOKEN}" -var-file="${CONFIG_DIR}/variables.tfvars"
+      terraform $tfmode -auto-approve -var="hcloud_token=${HCLOUD_TOKEN}" -var-file="${CONFIG_DIR}/variables.tfvars" -var-file="${CONFIG_DIR}/${TFVARSNUMVMS}"
       ;;
     linode)
-      cd $(pwd)/$CLOUDPROVIDER || { echo "Error: could not chdir to ${CLOUDPROVIDER}"; exit 1; }
+      cd ${BASEDIR}/$CLOUDPROVIDER || { echo "Error: could not chdir to ${CLOUDPROVIDER}"; exit 1; }
       terraform init
-      terraform $tfmode -auto-approve -var-file="${CONFIG_DIR}/variables.tfvars"
+      terraform $tfmode -auto-approve -var-file="${CONFIG_DIR}/variables.tfvars" -var-file="${CONFIG_DIR}/${TFVARSNUMVMS}"
       ;;
     digitalocean)
-      cd $(pwd)/$CLOUDPROVIDER || { echo "Error: could not chdir to ${CLOUDPROVIDER}"; exit 1; }
+      cd ${BASEDIR}/$CLOUDPROVIDER || { echo "Error: could not chdir to ${CLOUDPROVIDER}"; exit 1; }
       terraform init
-      terraform $tfmode -auto-approve -var="do_token=${DO_TOKEN}" -var-file="${CONFIG_DIR}/variables.tfvars"
+      terraform $tfmode -auto-approve -var="do_token=${DO_TOKEN}" -var-file="${CONFIG_DIR}/variables.tfvars" -var-file="${CONFIG_DIR}/${TFVARSNUMVMS}"
       ;;
     ovh)
-      source ${CONFIG_DIR}/openrc.sh || { echo "Error: could source openrc.sh openstack config for ${CLOUDPROVIDER}"; exit 1; }
-      cd $(pwd)/$CLOUDPROVIDER || { echo "Error: could not chdir to ${CLOUDPROVIDER}"; exit 1; }
+      source ${CONFIG_DIR}/openrc.sh \
+        || { echo "Error: could source openrc.sh openstack config for ${CLOUDPROVIDER}"; exit 1; }
+      cd ${BASEDIR}/$CLOUDPROVIDER || { echo "Error: could not chdir to ${CLOUDPROVIDER}"; exit 1; }
       terraform init
-      terraform $tfmode -auto-approve -var="do_token=${DO_TOKEN}" -var-file="${CONFIG_DIR}/variables.tfvars"
+      terraform $tfmode -auto-approve -var-file="${CONFIG_DIR}/variables.tfvars" -var-file="${CONFIG_DIR}/${TFVARSNUMVMS}"
       ;;
     *)
       echo "not supported cloud provider: ${CLOUDPROVIDER}"
@@ -167,14 +188,24 @@ __doterraform() {
 
 __doansible() {
   export ANSIBLE_HOST_KEY_CHECKING=False
-  [ -d $(pwd)/ansible ] && ansible-playbook -i hosts.cfg playbook.yaml
+  if [ $USE_GPU = "true" ]
+  then
+    cp "${BASEDIR}/templates/playbook_gpu.yaml" ${BASEDIR}/ansible/playbook.yaml \
+      || { echo "Error: could not copy ${BASEDIR}/templates/playbook_gpu.yaml to ${BASEDIR}/ansible/playbook.yaml"; exit 1; }
+    [ -d ${BASEDIR}/ansible ] && ansible-playbook -i hosts.cfg playbook.yaml
+  elif [ $USE_GPU = "true" ]
+  then
+    cp "${BASEDIR}/templates/playbook_default.yaml" ${BASEDIR}/ansible/playbook.yaml \
+      || { echo "Error: could not copy ${BASEDIR}/templates/playbook_default.yaml to ${BASEDIR}/ansible/playbook.yaml"; exit 1; }
+    [ -d ${BASEDIR}/ansible ] && ansible-playbook -i hosts.cfg playbook.yaml
+  fi
 }
 
 __main() {
-  [ $LOGGING = "true" ] && __enablelog
-  [ -z $FILE ] && FILE="$(pwd)/config/config.sh"
+  [ -z $CONFIGFILE ] && CONFIGFILE="`pwd`/config/config.sh"
   [ -z $NUMVMS ] && NUMVMS=1
   __checkreq
+  [ $LOGGING = "true" ] && __enablelog
   [ $SSH_CREATE_KEY = "true" ] && __sshkeygen
   __distributefiles
   __doterraform apply
@@ -195,18 +226,14 @@ __show_help() {
 # Parse command-line options
 while getopts "f:n:h" opt; do
     case ${opt} in
-        f ) # Process -f option
-            FILE=$OPTARG
+        f ) CONFIGFILE=$OPTARG
             ;;
-        n ) # Process -n option
-            NUMVMS=$OPTARG
+        n ) NUMVMS=$OPTARG
             ;;
-        h ) # Display help information
-            __show_help
+        h ) __show_help
             exit 0
             ;;
-        \? ) # Invalid option
-            echo "Invalid option: -$OPTARG" 1>&2
+        \? ) echo "Invalid option: -$OPTARG" 1>&2
             __show_help
             exit 1
             ;;

@@ -16,7 +16,7 @@
   register: files
 
 - name: transcribe all audio files
-  command: "whisper {{ remote_directory }}/{{ remote_hostname }}/{{ item }} --model {{ whisper_model_size }} --output_dir {{ remote_output_directory }}"
+  command: "whisper {{ remote_directory }}/{{ remote_hostname }}/{{ item }} --model {{ whisper_model_size }} --threads {{ instance_threads }} --output_dir {{ remote_output_directory }}"
   loop: "{{ files.stdout_lines }}"
   async: 2100000
   poll: 5
