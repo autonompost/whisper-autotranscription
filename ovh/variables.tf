@@ -1,3 +1,8 @@
+variable "endpoint" {
+  description = "endpoint of the ovh api"
+  type = string
+  default = "ovh-eu"
+}
 variable "number_vms" {
   description = "number virtual machines to deploy"
   type = number

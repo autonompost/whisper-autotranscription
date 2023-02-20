@@ -14,4 +14,3 @@ done
 
 # Attach to the new tmux session
 tmux attach-session -t htop
-

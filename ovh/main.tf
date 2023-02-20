@@ -17,7 +17,8 @@ provider "openstack" {
   alias       = "ovh" # An alias
 }
 provider "ovh" {
-  alias              = "ovh"
+  alias    = "ovh"
+  endpoint = var.endpoint
 }
 resource "openstack_compute_keypair_v2" "default" {
   provider   = openstack.ovh # Provider name declared in provider.tf
@@ -37,7 +38,7 @@ resource "openstack_compute_instance_v2" "default" {
   }
 }
 resource "local_file" "hosts_cfg" {
-  content = templatefile("../templates/hosts.tpl",
+  content = templatefile("../templates/hosts.tpl_ovh",
     {
       vms = openstack_compute_instance_v2.default[*].access_ip_v4
     }

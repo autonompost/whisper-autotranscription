@@ -37,7 +37,7 @@ __distributefiles() {
   [ ! -d $DST_DIR ] && mkdir -p $DST_DIR
   if (( $NUMVMS > 1 ))
   then
-    readarray -t files < <(find "$SRC_DIR" -type f | grep -E "*.mp3|*.wav")
+    readarray -t files < <(find "$SRC_DIR" -type f | grep -E "*.mp3$|*.wav$")
     files_per_dir=$(( ${#files[@]} / $NUMVMS ))
     if [ $(( ${#files[@]} % $NUMVMS )) -gt 0 ]
     then
@@ -74,7 +74,7 @@ __distributefiles() {
 
     for ext in "${extensions[@]}"
     do
-      files=$(find "$SRC_DIR" -type f -name "*.$ext" -print)
+      files=$(find "$SRC_DIR" -type f | grep -E "*.mp3$|*.wav$")
 
       [ ! -d $target_filedir ] && mkdir $target_filedir
       for file in $files
@@ -111,21 +111,20 @@ __doobsidian() {
 
 __dogetcpu() {
   # get the cpu for whisper threading information from the API of the CLOUDPROVIDER being used
+
   cp "${BASEDIR}/templates/${ANSIBLETEMPLATE}" ${BASEDIR}/ansible/group_vars/all/${ANSIBLETEMPLATE} \
     || { echo "Error: could not copy ${ANSIBLETEMPLATE} to ${BASEDIR}/ansible/group_vars/all"; exit 1; }
 
   # in order to only have the instance_type variable in the tfvars file, get it here as shell var
-  instance_type=$(grep -E "^instance_type" ${TFVARS} | perl -pe 's/^(instance_type.*)"(.*)"/$2/')
+  instance_type=$(grep -E "^instance_type" ${TFVARS} | grep -oP '(?<=")[^"]+(?=")')
 
   [ ! -z $instance_type ] \
     || { echo "__dogetcpu: ERROR - instance_type is empty"; exit 1; }
 
   case $CLOUDPROVIDER in
     hetzner)
-      set -x
       THREADS=$(curl -s -H "Authorization: Bearer ${HCLOUD_TOKEN}" "https://api.hetzner.cloud/v1/server_types" \
         | jq -r --arg i "${instance_type}" '.server_types[] | select(.name == $i) | .cores')
-      set +x
       ;;
     linode)
       THREADS=$(curl -s -H "Authorization: Bearer ${LINODE_TOKEN}" "https://api.linode.com/v4/linode/types" \
@@ -137,6 +136,8 @@ __dogetcpu() {
         | jq -r --arg i "${instance_type}" ".sizes[] | select(.slug == $i) | .vcpus")
       ;;
     ovh)
+      [ -x "$(command -v openstack)" ] \
+        || { echo "Error: openstack is not installed or not executable"; exit 1; }
       THREADS=$(openstack flavor list -f json | jq -r --arg i "${instance_type}" '.[] | select(.Name == $i) | .VCPUs')
       ;;
     *)
@@ -177,7 +178,7 @@ __doterraform() {
         || { echo "Error: could source openrc.sh openstack config for ${CLOUDPROVIDER}"; exit 1; }
       cd ${BASEDIR}/$CLOUDPROVIDER || { echo "Error: could not chdir to ${CLOUDPROVIDER}"; exit 1; }
       terraform init
-      terraform $tfmode -auto-approve -var-file="${CONFIG_DIR}/variables.tfvars" -var-file="${CONFIG_DIR}/${TFVARSNUMVMS}"
+      terraform $tfmode -auto-approve -var-file="${CONFIG_DIR}/variables.tfvars" -var-file="${CONFIG_DIR}/${TFVARSNUMVMS}" || exit 1
       ;;
     *)
       echo "not supported cloud provider: ${CLOUDPROVIDER}"
@@ -190,14 +191,16 @@ __doansible() {
   export ANSIBLE_HOST_KEY_CHECKING=False
   if [ $USE_GPU = "true" ]
   then
-    cp "${BASEDIR}/templates/playbook_gpu.yaml" ${BASEDIR}/ansible/playbook.yaml \
-      || { echo "Error: could not copy ${BASEDIR}/templates/playbook_gpu.yaml to ${BASEDIR}/ansible/playbook.yaml"; exit 1; }
-    [ -d ${BASEDIR}/ansible ] && ansible-playbook -i hosts.cfg playbook.yaml
-  elif [ $USE_GPU = "true" ]
+    cp "${BASEDIR}/templates/playbook_cuda.yaml" ${BASEDIR}/ansible/playbook.yaml \
+      || { echo "Error: could not copy ${BASEDIR}/templates/playbook_cuda.yaml to ${BASEDIR}/ansible/playbook.yaml"; exit 1; }
+    [ -d ${BASEDIR}/ansible ] && cd $BASEDIR/ansible
+    ansible-playbook -i hosts.cfg playbook.yaml || exit 1
+  elif [ $USE_GPU = "false" ]
   then
     cp "${BASEDIR}/templates/playbook_default.yaml" ${BASEDIR}/ansible/playbook.yaml \
       || { echo "Error: could not copy ${BASEDIR}/templates/playbook_default.yaml to ${BASEDIR}/ansible/playbook.yaml"; exit 1; }
-    [ -d ${BASEDIR}/ansible ] && ansible-playbook -i hosts.cfg playbook.yaml
+    [ -d ${BASEDIR}/ansible ] && cd $BASEDIR/ansible
+    ansible-playbook -i hosts.cfg playbook.yaml || exit 1
   fi
 }
 

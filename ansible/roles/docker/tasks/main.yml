@@ -12,6 +12,7 @@
       - curl
       - software-properties-common
       - python3-pip
+      - gnupg
       - virtualenv
       - python3-setuptools
     state: latest
@@ -19,20 +20,21 @@
 
 - name: Add Docker GPG apt Key
   apt_key:
-    url: https://download.docker.com/linux/ubuntu/gpg
+    url: https://download.docker.com/linux/debian/gpg
     state: present
 
 - name: Add Docker Repository
   apt_repository:
-    repo: deb https://download.docker.com/linux/ubuntu jammy stable
+    repo: deb https://download.docker.com/linux/debian bullseye stable
     state: present
 
-- name: Update apt and install docker-ce
+- name: update apt and install docker-ce
   apt:
-    name: docker-ce
+    pkg:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
     state: latest
     update_cache: true
-
-- name: Install Docker Module for Python
-  pip:
-    name: docker
