@@ -3,6 +3,7 @@
     pkg:
       - git
       - python3
+      - rsync
       - ffmpeg
       - python3-pip
     state: latest

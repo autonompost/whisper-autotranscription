@@ -1,6 +1,20 @@
 - hosts: all
   become: yes
   become_method: sudo
+  gather_facts: false
+
+  pre_tasks:
+    - name: wait_for_connection
+      wait_for_connection:
+        delay: 5
+        timeout: 600
+
+- name: now run the roles with gather_facts again
+  hosts: all
+  gather_facts: true
+  become: true
+  become_method: sudo
+
   roles:
     - role: sysupdate
     - role: rclone

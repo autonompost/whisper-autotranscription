@@ -1,7 +1,39 @@
-export DO_TOKEN=
-export HCLOUD_TOKEN=""
-export LINODE_TOKEN=
-export OVH_ENDPOINT=ovh-eu
-export OVH_APPLICATION_KEY=
-export OVH_APPLICATION_SECRET=
-export OVH_CONSUMER_KEY=
+OVH_ENDPOINT=ovh-eu
+# instance_type has a GPU build in then set this to true
+USE_GPU="true"
+# cleanup all the files that have been uploaded to the remote vms
+CLEANUP="false"
+# use rclone true or false .. if rclone is set to true an rclone.conf needs to be created under config/rclone.conf
+RCLONE="false"
+# obsidian audio-notes usage https://github.com/jjmaldonis/obsidian-audio-notes
+OBSIDIAN="false"
+# terraform destroy true|false
+TFDESTROY="true"
+# execute ansible
+ANSIBLE="true"
+# can be one of the following "hetzner|digitalocean|linode|ovh|gcp"
+CLOUDPROVIDER="gcp"
+# create a new ssh key if it does not exist
+SSH_CREATE_KEY="true"
+# create a new ssh key anyway, even if one already exists
+SSH_CREATE_KEY_FORCE="false"
+# turn logging on or off
+LOGGING="true"
+# move output files to source folder after processing 
+COPYOUTPUT="true"
+# local path of your files
+BASEDIR="/pathto/whisper-autotranscription"
+# the following directories have to be located in your BASEDIR
+CONFIG_DIR="config"
+SRC_DIR="files_upload"
+DST_DIR="files_download"
+LOG_DIR="logs"
+SECRETSFILE="secrets.sh"
+TEMPLATE_DIR="templates"
+# terraform related variables
+TFVARS="variables.tfvars"
+TFTEMPLATE="variables_number_vms.tfvars"
+# ansible related variables 
+ANSIBLETEMPLATE="ansible_vars.yaml"
+# obsidian path where to copy the files for your obsidian vault
+OBSIDIAN_DIR=""

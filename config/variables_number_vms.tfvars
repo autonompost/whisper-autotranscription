@@ -1,1 +1,1 @@
-number_vms = 2
+number_vms = 1

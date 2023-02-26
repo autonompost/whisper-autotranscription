@@ -32,6 +32,6 @@ os_image = "debian-cloud/debian-11"
 region = "europe-west4"
 zone = "europe-west4-a"
 project_id = "whisper-378417"
-number_gpus = 1
+number_gpus = 0
 gpu_type = "nvidia-tesla-t4"
 #gpu_type = "nvidia-tesla-a100"

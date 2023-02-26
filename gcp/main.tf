@@ -42,9 +42,11 @@ resource "google_compute_instance" "default" {
   machine_type = var.instance_type
   zone         = var.zone
 
+  # boot disk size is 100GB
   boot_disk {
     initialize_params {
       image = var.os_image
+      size  = 100
     }
   }
 
