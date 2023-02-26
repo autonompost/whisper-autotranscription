@@ -14,17 +14,16 @@
 #instance_type = "ccx21"
 #os_image = "debian-11"
 # linode
-#number_vms = 2
-#region = "eu-central"
-#ssh_public_key_name = "whisper-ssh-key"
-#instance_name = "vm-whisper"
-#instance_type = "g6-standard-1"
-#os_image = "linode/ubuntu22.04"
-# ovh
-#region = "GRA9"
-region = "BHS5"
+region = "eu-central"
 ssh_public_key_name = "whisper-ssh-key"
 instance_name = "vm-whisper"
-#instance_type = "b2-7" # for testing
-instance_type = "t1-45" # GPU Instance
-os_image = "Debian 11"
+instance_type = "g1-gpu-rtx6000-1"
+os_image = "linode/debian11"
+# ovh
+# ran into errors even in the interface #region = "GRA9" 
+#region = "BHS5"
+#ssh_public_key_name = "whisper-ssh-key"
+#instance_name = "vm-whisper"
+#instance_type = "t1-45" # GPU Instance
+#os_image = "Debian 11"
+##instance_type = "b2-7" # for testing

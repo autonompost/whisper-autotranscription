@@ -1,1 +1,1 @@
-instance_threads: 8
+instance_threads: THREADS

@@ -11,5 +11,6 @@ config/rclone.conf
 ansible/hosts.cfg
 ansible/files/**
 files/**
-files_complete/*
+files_download/**
+files_upload/***
 test.sh

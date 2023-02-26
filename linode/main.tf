@@ -8,6 +8,7 @@ terraform {
 }
 
 provider "linode" {
+  token = var.linode_token
 }
 
 resource "linode_instance" "default" {
