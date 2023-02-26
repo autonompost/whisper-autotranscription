@@ -15,59 +15,76 @@ provider "google" {
 # enable service api for compute
 resource "google_project_service" "compute" {
   service = "compute.googleapis.com"
+  disable_on_destroy = false
 }
 
 # enable service api for vpc access
 resource "google_project_service" "vpc_access" {
   service = "vpcaccess.googleapis.com"
+  disable_on_destroy = false
 }
 
-resource "google_compute_instance_template" "default" {
-  name_prefix  = var.instance_name
-  machine_type = var.instance_type
-  #machine_type = "a2-highgpu-1g"
+resource "google_service_account" "default" {
+  account_id   = "whisper-service-account-id"
+  display_name = "whisper Service Account"
+}
 
-  guest_accelerator {
-    type = var.gpu_type
-    #type = "nvidia-tesla-a100"
-    count = var.number_gpus
-    #count = 1
+# attach iam role to service_account for compute service
+resource "google_project_iam_member" "compute_service_account" {
+  role   = "roles/compute.instanceAdmin.v1"
+  member = "serviceAccount:${google_service_account.default.email}"
+  project = var.project_id
+}
+
+resource "google_compute_instance" "default" {
+  count        = var.number_vms
+  name         = "${var.instance_name}-${count.index}"
+  machine_type = var.instance_type
+  zone         = var.zone
+
+  boot_disk {
+    initialize_params {
+      image = var.os_image
+    }
   }
 
-  disk {
-    auto_delete   = true
-    boot          = true
-    source_image  = var.os_image
-    #source_image = "projects/debian-cloud/global/images/debian-11-bullseye-v20220110"
-    type          = "pd-ssd"
-    size          = 50
+  dynamic "guest_accelerator" {
+    for_each = var.number_gpus > 0 ? [1] : []
+    content {
+      count  = var.number_gpus
+      type   = var.gpu_type
+    }
+  }
+
+  // Local SSD disk
+  scratch_disk {
+    interface = "SCSI"
   }
 
   network_interface {
     network = "default"
-    access_config {
-      // Allocate a public IP address for the instance
-    }
-  }
 
-  metadata = {
-    ssh-keys = "debian:${file(var.ssh_key)}"
+    access_config {
+      // Ephemeral public IP
+    }
   }
 
   scheduling {
     preemptible = true
+    on_host_maintenance = "TERMINATE"
+    provisioning_model          = "SPOT"
+    instance_termination_action = "DELETE"
+    automatic_restart = false
   }
-  depends_on = [google_project_service.compute]
-}
 
-resource "google_compute_instance_group_manager" "default" {
-  name = "whisper-igm"
-  base_instance_name = var.instance_name
-  instance_template = google_compute_instance_template.default.self_link
+  metadata = {
+    ssh-keys = "debian:${file("../id_rsa.pub")}"
+  }
 
-  target_size = var.number_vms
-
-  depends_on = [google_project_service.compute]
+  service_account {
+    email  = google_service_account.default.email
+    scopes = ["cloud-platform"]
+  }
 }
 
 resource "google_compute_firewall" "firewall" {
@@ -78,6 +95,15 @@ resource "google_compute_firewall" "firewall" {
     protocol = "tcp"
     ports    = ["22"]
   }
-
   source_ranges = ["0.0.0.0/0"]
+  depends_on = [google_project_service.vpc_access]
+}
+
+resource "local_file" "hosts_cfg" {
+  content = templatefile("../templates/hosts.tpl_debian",
+    {
+      vms = google_compute_instance.default[*].network_interface.0.access_config.0.nat_ip
+    }
+  )
+  filename = "../ansible/hosts.cfg"
 }

@@ -206,6 +206,12 @@ __dogetcpu() {
         "https://api.digitalocean.com/v2/sizes?per_page=200" \
         | jq -r --arg i "${instance_type}" ".sizes[] | select(.slug == $i) | .vcpus")
       ;;
+    gcp)
+      [ -x "$(command -v gcloud)" ] \
+        || { echo "Error: gcloud cli is not installed or not executable"; exit 1; }
+      zone=$(grep -E "^zone" ${BASEDIR}/${CONFIG_DIR}/${TFVARS} | grep -oP '(?<=")[^"]+(?=")')
+      THREADS=$(gcloud compute machine-types describe ${instance_type} --format="value(guestCpus)" --zone ${zone})
+      ;;
     ovh)
       [ -x "$(command -v openstack)" ] \
         || { echo "Error: openstack is not installed or not executable"; exit 1; }
@@ -233,29 +239,40 @@ __doterraform() {
   case $CLOUDPROVIDER in
     hetzner)
       cd ${BASEDIR}/$CLOUDPROVIDER || { echo "Error: could not chdir to ${CLOUDPROVIDER}"; exit 1; }
-      terraform init
+      terraform init || { echo "Error: terraform init failed"; exit 1; }
       terraform $tfmode -auto-approve -var="hcloud_token=${HCLOUD_TOKEN}" \
-        -var-file="${BASEDIR}/${CONFIG_DIR}/${TFVARS}" -var-file="${BASEDIR}/${CONFIG_DIR}/${TFTEMPLATE}"
+        -var-file="${BASEDIR}/${CONFIG_DIR}/${TFVARS}" -var-file="${BASEDIR}/${CONFIG_DIR}/${TFTEMPLATE}" \
+        || echo "Error: terraform $tfmode failed" && exit 1
       ;;
     linode)
       cd ${BASEDIR}/$CLOUDPROVIDER || { echo "Error: could not chdir to ${CLOUDPROVIDER}"; exit 1; }
-      terraform init
+      terraform init || { echo "Error: terraform init failed"; exit 1; }
       terraform $tfmode -auto-approve  -var="linode_token=${LINODE_TOKEN}" \
-        -var-file="${BASEDIR}/${CONFIG_DIR}/${TFVARS}" -var-file="${BASEDIR}/${CONFIG_DIR}/${TFTEMPLATE}"
+        -var-file="${BASEDIR}/${CONFIG_DIR}/${TFVARS}" -var-file="${BASEDIR}/${CONFIG_DIR}/${TFTEMPLATE}" \
+        || echo "Error: terraform $tfmode failed" && exit 1
       ;;
     digitalocean)
       cd ${BASEDIR}/$CLOUDPROVIDER || { echo "Error: could not chdir to ${CLOUDPROVIDER}"; exit 1; }
-      terraform init
+      terraform init || { echo "Error: terraform init failed"; exit 1; }
       terraform $tfmode -auto-approve -var="do_token=${DO_TOKEN}" \
-        -var-file="${BASEDIR}/${CONFIG_DIR}/${TFVARS}" -var-file="${BASEDIR}/${CONFIG_DIR}/${TFTEMPLATE}"
+        -var-file="${BASEDIR}/${CONFIG_DIR}/${TFVARS}" -var-file="${BASEDIR}/${CONFIG_DIR}/${TFTEMPLATE}" \
+        || echo "Error: terraform $tfmode failed" && exit 1
+      ;;
+    gcp)
+      cd ${BASEDIR}/$CLOUDPROVIDER || { echo "Error: could not chdir to ${CLOUDPROVIDER}"; exit 1; }
+      [ $(gcloud auth list --filter=status:ACTIVE  --format="value(account)" | wc -l) -gt 0 ] && echo "gcloud auth ok" \
+        || { echo "Error: gcloud auth is not ok"; exit 1; }
+      terraform init || { echo "Error: terraform init failed"; exit 1; }
+      terraform $tfmode -auto-approve -var-file="${BASEDIR}/${CONFIG_DIR}/${TFVARS}" \
+        -var-file="${BASEDIR}/${CONFIG_DIR}/${TFTEMPLATE}" || echo "Error: terraform $tfmode failed" && exit 1
       ;;
     ovh)
       source ${CONFIG_DIR}/openrc.sh \
         || { echo "Error: could source openrc.sh openstack config for ${CLOUDPROVIDER}"; exit 1; }
       cd ${BASEDIR}/$CLOUDPROVIDER || { echo "Error: could not chdir to ${CLOUDPROVIDER}"; exit 1; }
-      terraform init
+      terraform init || { echo "Error: terraform init failed"; exit 1; }
       terraform $tfmode -auto-approve -var-file="${BASEDIR}/${CONFIG_DIR}/${TFVARS}" \
-        -var-file="${BASEDIR}/${CONFIG_DIR}/${TFTEMPLATE}" || exit 1
+        -var-file="${BASEDIR}/${CONFIG_DIR}/${TFTEMPLATE}" || echo "Error: terraform $tfmode failed" && exit 1
       ;;
     *)
       echo "not supported cloud provider: ${CLOUDPROVIDER}"

@@ -38,7 +38,7 @@ resource "openstack_compute_instance_v2" "default" {
   }
 }
 resource "local_file" "hosts_cfg" {
-  content = templatefile("../templates/hosts.tpl_ovh",
+  content = templatefile("../templates/hosts.tpl_debian",
     {
       vms = openstack_compute_instance_v2.default[*].access_ip_v4
     }

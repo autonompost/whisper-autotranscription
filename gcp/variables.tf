@@ -16,7 +16,7 @@ variable "gpu_type" {
 }
 variable "number_gpus" {
   description = "number of gpu's to use for the instance"
-  type = integer
+  type = number
 }
 variable "project_id" {
   description = "gcp project for deployment"
