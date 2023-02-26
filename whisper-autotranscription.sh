@@ -160,7 +160,7 @@ __docopyouput() {
 
   # get all files from the source directory
   readarray -t upload_array < <(find $BASEDIR/$SRC_DIR -type f | grep -E "*.mp3$|*.wav$")
-  
+
   # iterate over the unique files and copy them to the source directory
   for i in "${download_unique_array[@]}"
   do
@@ -357,4 +357,4 @@ then
   exec 1>&3 3>&- 2>&4 4>&-
 fi
 
-trap __exit_handler EXIT SIGINT SIGTERM SIGQUIT SIGABRT SIGKILL 
+trap __exit_handler EXIT SIGINT SIGTERM SIGQUIT SIGABRT SIGKILL

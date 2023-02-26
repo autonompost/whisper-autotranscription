@@ -19,7 +19,7 @@ instance_name = "vm-whisper"
 #os_image = "linode/debian11"
 
 # ovh
-# ran into errors even in the interface #region = "GRA9" 
+# ran into errors even in the interface #region = "GRA9"
 #region = "BHS5"
 #instance_type = "t1-45" # GPU Instance
 #os_image = "Debian 11"
@@ -33,4 +33,3 @@ zone = "europe-west4-a"
 project_id = "whisper-378417"
 number_gpus = 0
 gpu_type = "nvidia-tesla-a100"
-
