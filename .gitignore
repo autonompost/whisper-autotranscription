@@ -9,7 +9,7 @@ config/secrets.sh
 config/openrc.sh
 config/rclone.conf
 ansible/hosts.cfg
-ansible/files/**
+ansible/group_vars/all/ansible_vars.yaml
 files/**
 files_download/**
 files_upload/***

@@ -1,6 +1,6 @@
 ---
 galaxy_info:
-  author: ybaumy
+  author: autonompost
   description: install whisper packages
   license: AGPL
   min_ansible_version: 2.1

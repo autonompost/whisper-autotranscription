@@ -1,5 +1,5 @@
 - name: copy whisper output files to local download directory
   synchronize:
     src: "{{ remote_output_directory }}"
-    dest: "{{ local_download_directory }}"
+    dest: "{{ file_directory }}"
     mode: pull

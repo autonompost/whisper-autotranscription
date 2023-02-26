@@ -1,7 +1,7 @@
 ---
 galaxy_info:
-  author: ybaumy
-  description: install docker
+  author: autonompost
+  description: os system update
   license: AGPL
   min_ansible_version: 2.1
   platforms:

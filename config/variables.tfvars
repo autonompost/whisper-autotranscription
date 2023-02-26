@@ -26,10 +26,12 @@ instance_name = "vm-whisper"
 ##instance_type = "b2-7" # for testing
 
 # gcp
-instance_type = "n1-standard-1"
+#instance_type = "a2-highgpu-1g"
+instance_type = "n1-standard-4"
 os_image = "debian-cloud/debian-11"
 region = "europe-west4"
 zone = "europe-west4-a"
 project_id = "whisper-378417"
-number_gpus = 0
-gpu_type = "nvidia-tesla-a100"
+number_gpus = 1
+gpu_type = "nvidia-tesla-t4"
+#gpu_type = "nvidia-tesla-a100"

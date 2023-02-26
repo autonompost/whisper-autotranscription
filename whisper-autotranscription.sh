@@ -4,12 +4,6 @@
 
 # start logging
 cdatetime=`date +"%Y%m%d-%H%M%S"`
-if [ $LOGGING = "true" ]
-then
-  # start logging to file
-  echo "Logging to file ${BASEDIR}/${LOG_DIR}/${cdatetime}.log"
-  exec > >(tee -a ${BASEDIR}/${LOG_DIR}/${cdatetime}.log) 2>&1
-fi
 
 # functions
 
@@ -22,6 +16,12 @@ __checkreq() {
   # load the config file
   source ${CONFIGFILE}
 
+  if [ $LOGGING = "true" ]
+  then
+    # start logging to file
+    echo "Logging to file ${BASEDIR}/${LOG_DIR}/${cdatetime}.log"
+    exec > >(tee -a ${BASEDIR}/${LOG_DIR}/${cdatetime}.log) 2>&1
+  fi
   # check if the secrets file exists
   [ -f ${BASEDIR}/${CONFIG_DIR}/${SECRETSFILE} ] \
     || { echo "Error: config file ${BASEDIR}/${CONFIG_DIR}/${SECRETSFILE} cannot be found or is not readable"; exit 1; }
@@ -254,21 +254,21 @@ __doterraform() {
       terraform init || { echo "Error: terraform init failed"; exit 1; }
       terraform $tfmode -auto-approve -var="hcloud_token=${HCLOUD_TOKEN}" \
         -var-file="${BASEDIR}/${CONFIG_DIR}/${TFVARS}" -var-file="${BASEDIR}/${CONFIG_DIR}/${TFTEMPLATE}" \
-        || echo "Error: terraform $tfmode failed" && exit 1
+        || exit 1
       ;;
     linode)
       cd ${BASEDIR}/$CLOUDPROVIDER || { echo "Error: could not chdir to ${CLOUDPROVIDER}"; exit 1; }
       terraform init || { echo "Error: terraform init failed"; exit 1; }
       terraform $tfmode -auto-approve  -var="linode_token=${LINODE_TOKEN}" \
         -var-file="${BASEDIR}/${CONFIG_DIR}/${TFVARS}" -var-file="${BASEDIR}/${CONFIG_DIR}/${TFTEMPLATE}" \
-        || echo "Error: terraform $tfmode failed" && exit 1
+        || exit 1
       ;;
     digitalocean)
       cd ${BASEDIR}/$CLOUDPROVIDER || { echo "Error: could not chdir to ${CLOUDPROVIDER}"; exit 1; }
       terraform init || { echo "Error: terraform init failed"; exit 1; }
       terraform $tfmode -auto-approve -var="do_token=${DO_TOKEN}" \
         -var-file="${BASEDIR}/${CONFIG_DIR}/${TFVARS}" -var-file="${BASEDIR}/${CONFIG_DIR}/${TFTEMPLATE}" \
-        || echo "Error: terraform $tfmode failed" && exit 1
+        || exit 1
       ;;
     gcp)
       cd ${BASEDIR}/$CLOUDPROVIDER || { echo "Error: could not chdir to ${CLOUDPROVIDER}"; exit 1; }
@@ -276,7 +276,7 @@ __doterraform() {
         || { echo "Error: gcloud auth is not ok"; exit 1; }
       terraform init || { echo "Error: terraform init failed"; exit 1; }
       terraform $tfmode -auto-approve -var-file="${BASEDIR}/${CONFIG_DIR}/${TFVARS}" \
-        -var-file="${BASEDIR}/${CONFIG_DIR}/${TFTEMPLATE}" || echo "Error: terraform $tfmode failed" && exit 1
+        -var-file="${BASEDIR}/${CONFIG_DIR}/${TFTEMPLATE}" || exit 1 
       ;;
     ovh)
       source ${CONFIG_DIR}/openrc.sh \
@@ -284,7 +284,7 @@ __doterraform() {
       cd ${BASEDIR}/$CLOUDPROVIDER || { echo "Error: could not chdir to ${CLOUDPROVIDER}"; exit 1; }
       terraform init || { echo "Error: terraform init failed"; exit 1; }
       terraform $tfmode -auto-approve -var-file="${BASEDIR}/${CONFIG_DIR}/${TFVARS}" \
-        -var-file="${BASEDIR}/${CONFIG_DIR}/${TFTEMPLATE}" || echo "Error: terraform $tfmode failed" && exit 1
+        -var-file="${BASEDIR}/${CONFIG_DIR}/${TFTEMPLATE}" || exit 1
       ;;
     *)
       echo "not supported cloud provider: ${CLOUDPROVIDER}"
@@ -322,10 +322,9 @@ __doansible() {
 }
 
 __main() {
-  [ -z $CONFIGFILE ] && CONFIGFILE="${BASEDIR}/${CONFIG_DIR}/config.sh" # check if config file is given
+  [ -z $CONFIGFILE ] && CONFIGFILE="config/config.sh" # check if config file is given
   [ -z $NUMVMS ] && NUMVMS=1 # default to 1 VM
   __checkreq # check if all required tools are installed
-  [ $LOGGING = "true" ] && __enablelog # enable logging
   [ $SSH_CREATE_KEY = "true" ] && __sshkeygen # create ssh key
   __distributefiles # distribute files to the correct directories
   __doterraform apply # create the VMs with terraform
@@ -339,7 +338,7 @@ __main() {
 
 __show_help() {
     echo "Usage: $0 [-f CONFIGFILE] [-n NUMBER VMS] [-h]"
-    echo "  -f CONFIGFILE Specify a config file (optional. will use ${BASEDIR}/${CONFIG_DIR}/config.sh if not specified))"
+    echo "  -f CONFIGFILE Specify a config file (optional. will use config/config.sh if not specified))"
     echo "  -n NUMVMS     Specify a number of VMS to create (optional. will use 1 if not specified))"
     echo "  -h            Display this help message"
 }

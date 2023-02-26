@@ -8,7 +8,7 @@
     mode: 0770
 
 - name: Get a list of unique subdirectories
-  ansible.builtin.command: find "{{ local_upload_directory }}"/ -maxdepth 2 -mindepth 1 -type d
+  ansible.builtin.command: find "{{ file_directory }}"/ -maxdepth 2 -mindepth 1 -type d
   register: subdirs
   delegate_to: localhost
   become: false

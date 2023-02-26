@@ -5,6 +5,7 @@
 - A Google Cloud Account
 - A GCP Project needed for `project_id` Terraform variable
 - Install gcloud CLI as documented at [Install the Google Cloud CLI](https://cloud.google.com/sdk/docs/install-sdk)
+- Enough resouce quotas for GPU use globally and per region
 
 With `gcloud` command installed and available in your $PATH, login in the CLI
 
