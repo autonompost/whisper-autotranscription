@@ -31,7 +31,7 @@ This will let you bulk transcribe audio files using a cloud provider of your cho
 - [ ] automatically create summaries for transcripts
 - [ ] Supported Cloud Providers
   - [ ] Azure (GPU)
-	- [ ] Linode (GPU) (not yet fully tested since I did not get any GPU instance access)
+  - [ ] Linode (GPU) (not yet fully tested since I did not get any GPU instance access)
 
 ## Version 3
 
