@@ -3,11 +3,11 @@ terraform {
   required_providers {
     openstack = {
       source  = "terraform-provider-openstack/openstack"
-      version = "~> 1.49.0"
+      version = ">= 1.40.0"
     }
     ovh = {
       source  = "ovh/ovh"
-      version = "0.26.0"
+      version = ">= 0.20.0"
     }
   }
 }
