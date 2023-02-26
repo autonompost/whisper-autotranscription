@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # execute this script to automatically transcribe audio files on a cloud provider of choice
+# see README.md for more information
 
 # start logging
 cdatetime=`date +"%Y%m%d-%H%M%S"`
@@ -14,11 +15,17 @@ fi
 
 # check requirements
 __checkreq() {
+
+  # check if the config file exists
   [ -f ${CONFIGFILE} ] \
     || { echo "Error: config file ${CONFIGFILE} cannot be found or is not readable"; exit 1; }
+  # load the config file
   source ${CONFIGFILE}
+
+  # check if the secrets file exists
   [ -f ${BASEDIR}/${CONFIG_DIR}/${SECRETSFILE} ] \
     || { echo "Error: config file ${BASEDIR}/${CONFIG_DIR}/${SECRETSFILE} cannot be found or is not readable"; exit 1; }
+  # load the secrets file
   source ${BASEDIR}/${CONFIG_DIR}/${SECRETSFILE}
 
   # check if the source directory exists
@@ -37,10 +44,13 @@ __checkreq() {
   [ -d ${BASEDIR}/ansible ] \
     || { echo "Error: ansible directory ${BASEDIR}/ansible cannot be found or is not readable"; exit 1; }
 
+  # check if the ansible binary exists and is executable
   [ -x "$(command -v ansible)" ] \
     || { echo "Error: ansible is not installed or not executable"; exit 1; }
+  # check if the ansible-playbook binary exists and is executable
   [ -x "$(command -v ansible-playbook)" ] \
     || { echo "Error: ansible-playbook is not installed or not executable"; exit 1; }
+  # check if the terraform binary exists and is executable
   [ -x "$(command -v terraform)" ] \
     || { echo "Error: terraform is not installed or not executable"; exit 1; }
 }
@@ -81,14 +91,15 @@ __distributefiles() {
     # split the files into NUMVMS directories
     split -l $files_per_dir -d -a 1 <(printf '%s\n' "${files[@]}") vm-whisper-
 
-    # copy the files to the destination directory
     find . -name "vm-whisper-*" -print0 | while IFS= read -r -d '' file
     do
       sub_dir="${BASEDIR}/${DST_DIR}/${file}"
       echo "subdir $sub_dir"
 
+      # create the directories
       [ ! -d "$sub_dir" ] && mkdir -p "$sub_dir"
 
+      # copy the files to the subdirectory
       while read line
       do
         printf '%s\n' "$line"
@@ -188,6 +199,7 @@ __dogetcpu() {
   # in order to only have the instance_type variable in the tfvars file, get it here as shell var
   instance_type=$(grep -E "^instance_type" ${BASEDIR}/${CONFIG_DIR}/${TFVARS} | grep -oP '(?<=")[^"]+(?=")')
 
+  # check if instance_type is empty
   [ ! -z $instance_type ] \
     || { echo "__dogetcpu: ERROR - instance_type is empty"; exit 1; }
 
@@ -310,20 +322,19 @@ __doansible() {
 }
 
 __main() {
-  # check if config file is given
-  [ -z $CONFIGFILE ] && CONFIGFILE="${BASEDIR}/${CONFIG_DIR}/config.sh"
-  [ -z $NUMVMS ] && NUMVMS=1
-  __checkreq
-  [ $LOGGING = "true" ] && __enablelog
-  [ $SSH_CREATE_KEY = "true" ] && __sshkeygen
-  __distributefiles
-  __doterraform apply
-  __dogetcpu
-  [ $ANSIBLE = "true" ] && __doansible
-  [ $OBSIDIAN = "true" ] && __doobsidian
-  [ $TFDESTROY = "true" ] && __doterraform destroy
-  [ $COPYOUTPUT = "true" ] && __docopyouput
-  [ $CLEANUP = "true" ] && __cleanup
+  [ -z $CONFIGFILE ] && CONFIGFILE="${BASEDIR}/${CONFIG_DIR}/config.sh" # check if config file is given
+  [ -z $NUMVMS ] && NUMVMS=1 # default to 1 VM
+  __checkreq # check if all required tools are installed
+  [ $LOGGING = "true" ] && __enablelog # enable logging
+  [ $SSH_CREATE_KEY = "true" ] && __sshkeygen # create ssh key
+  __distributefiles # distribute files to the correct directories
+  __doterraform apply # create the VMs with terraform
+  __dogetcpu # get cpu info for whisper threading
+  [ $ANSIBLE = "true" ] && __doansible # run ansible
+  [ $TFDESTROY = "true" ] && __doterraform destroy # destroy the VMs with terraform
+  [ $COPYOUTPUT = "true" ] && __docopyouput # copy output files to output dir
+  [ $OBSIDIAN = "true" ] && __doobsidian # run obsidian
+  [ $CLEANUP = "true" ] && __cleanup # cleanup
 }
 
 __show_help() {
