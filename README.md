@@ -41,6 +41,13 @@ This will let you bulk transcribe audio files using a cloud provider of your cho
 
 ## General Setup Steps
 
+This project has been testing with the following versions:
+
+- Terraform 1.3.9
+- Ansible 2.13.4
+- Python 3.10.10
+- openstack client 6.0.0
+
 In order to use this project, first create your config files as described in the section below.
 
 ```shell
