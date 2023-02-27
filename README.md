@@ -20,6 +20,7 @@ This will let you bulk transcribe audio files using a cloud provider of your cho
 
 ## Version 1.1
 
+- [ ] more CLI script parameters to reduce the config file mess
 - [ ] Supported Cloud Providers
   - [ ] AWS (GPU)
 
@@ -40,22 +41,81 @@ This will let you bulk transcribe audio files using a cloud provider of your cho
 
 ## General Setup Steps
 
-In order to use this project 
-
-### Global Config
+In order to use this project, first create your config files as described in the section below.
 
 ```shell
+Usage: ./whisper-autotranscription.sh [-f CONFIGFILE] [-n NUMBER VMS] [-h]
+  -f CONFIGFILE Specify a config file (optional. will use config/config.sh if not specified))
+  -n NUMVMS     Specify a number of VMS to create (optional. will use 1 if not specified))
+  -h            Display this help message
 ```
+
+### Files
+
+Files that need to be processed need to be put in `files_upload` directory `$SRC_DIR`. After the transcription the files will first be downloaded to `files_download` directory `$DST_DIR` and then copied to the originating directories in `files_upload` or `$SRC_DIR`.
+
+If the variable `CLEANUP` is set to `true`, the files in `files_download` will be deleted.
+
+### config.sh
+
+The file `config/config.sh_example` needs to be copied over to `config/config.sh`
+
+```shell
+cp config/config.sh_example config/config.sh
+```
+
+Adjust the values according to your needs.
 
 ### Terraform Variables
 
+The terraform tfvars file `config/variables.tfvars_example` needs to be copied over to `config/variables.tfvars`
+
 ```shell
+cp config/variables.tfvars_example config/variables.tfvars
 ```
+
+Adjust the values according to your needs.
 
 ### Ansible Variables
 
+The file `templates/ansible_vars.yaml_example` needs to be copied over to `templates/ansible_vars.yaml`
+
 ```shell
+cp templates/ansible_vars.yaml_example templates/ansible_vars.yaml
 ```
+
+In the `templates/ansible_vars.yaml` file the model size can be set and also the path to download the files to. This needs to be the same as the `DST_DIR` from the `config/config.sh`.
+
+**DO NOT CHANGE the variable for THREADS, this is done in the `whisper-autotranscription.sh` script which will get the value according to `instance_type`**
+
+```shell
+instance_threads: THREADS
+whisper_model_size: "medium"
+whisper_retry_count: 3
+whisper_retry_delay: 10
+file_directory: "/pathto/whisper-autotranscription/files_download"
+```
+
+### secrets.sh
+
+The file `config/secrets.sh_example` needs to be copied over to `config/secrets.sh`
+
+```shell
+cp config/secrets.sh_example config/secrets.sh
+```
+
+Edit the file and add the API Token(s) of your Cloud Provider
+
+```shell
+DO_TOKEN=
+HCLOUD_TOKEN=
+LINODE_TOKEN=
+OVH_APPLICATION_KEY=
+OVH_APPLICATION_SECRET=
+OVH_CONSUMER_KEY=
+```
+
+For `GCP` use `gcloud auth login` in order to use terraform.
 
 ### Cloud Provider Specific Instructions
 

@@ -2,4 +2,4 @@ instance_threads: THREADS
 whisper_model_size: "medium"
 whisper_retry_count: 3
 whisper_retry_delay: 10
-file_directory: "/home/ybaumy/git/whisper-autotranscription/files_download"
+file_directory: "/pathto/files_download"

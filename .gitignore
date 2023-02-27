@@ -13,4 +13,5 @@ ansible/group_vars/all/ansible_vars.yaml
 files/**
 files_download/**
 files_upload/***
+config/variables.tfvars
 test.sh
