@@ -1,4 +1,5 @@
-# Autotranscription with Whisper
+# Autotranscription with Whisper (Work in Progress - Do not use yet)
+
 
 This will let you bulk transcribe audio files using a cloud provider of your choice. The project is using `terraform` to create a number of instances and uses `ansible` to configure and transcribe the files in parallel using whisper.
 
@@ -85,7 +86,7 @@ Adjust the values according to your needs.
 
 ### Ansible Variables
 
-The file `templates/ansible_vars.yaml_example` needs to be copied over to `templates/ansible_vars.yaml`
+The file `templates/ansible_vars.yaml_example` needs to be copied over to `templates/ansible_vars.yaml`.
 
 ```shell
 cp templates/ansible_vars.yaml_example templates/ansible_vars.yaml
@@ -105,10 +106,13 @@ file_directory: "/pathto/whisper-autotranscription/files_download"
 
 ### secrets.sh
 
-The file `config/secrets.sh_example` needs to be copied over to `config/secrets.sh`
+The file `config/secrets.sh_example` needs to be copied over to `config/secrets.sh`.
+
+The file `config/ansible_secrets.yaml_example` needs to be copied over to `config/ansible_secrets.yaml`.
 
 ```shell
 cp config/secrets.sh_example config/secrets.sh
+cp config/ansible_secrets.yaml_example config/ansible_secrets.yaml
 ```
 
 Edit the file and add the API Token(s) of your Cloud Provider

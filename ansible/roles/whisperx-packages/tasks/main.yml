@@ -1,0 +1,43 @@
+- name: install required whisper packages
+  apt:
+    pkg:
+      - git
+      - python3
+      - rsync
+      - ffmpeg
+      - python3-pip
+      - build-essential
+    state: latest
+    update_cache: true
+
+- name: install whisper python pip packages
+  ansible.builtin.pip:
+    name: "{{ item }}"
+  with_items:
+     - setuptools
+     - setuptools-rust
+     - git+https://github.com/m-bain/whisperx.git
+     - torchvision
+
+- name: print if whisper model already exists
+  ansible.builtin.debug:
+    msg: "{{ ansible_env.HOME }}/.cache/whisper/{{ whisper_model_size }}.pt"
+  environment:
+    HOME: "{{ ansible_env.HOME }}"
+  when: whisper_model_size is defined
+
+- name: check if whisper model already exists
+  stat:
+    path: "{{ ansible_env.HOME }}/.cache/whisper/{{ whisper_model_size }}.pt"
+  environment:
+    HOME: "{{ ansible_env.HOME }}"
+  register: stat
+
+- name: download whisper model
+  when: stat.stat.exists == False
+  ansible.builtin.command: python3 -c "import whisperx; print(whisperx._download(whisperx._MODELS['"{{ whisper_model_size }}"'], '$HOME/.cache/whisper', False))"
+  register: result
+  retries: "{{ whisper_retry_count }}"
+  delay: "{{ whisper_retry_delay }}"
+  until: result.rc == 0
+  failed_when: result.rc != 0

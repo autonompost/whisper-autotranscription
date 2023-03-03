@@ -6,6 +6,8 @@ logs/**
 */*.tfstate*
 config/config.sh
 config/secrets.sh
+config/ansible_secrets.yaml
+ansible/group_vars/all/ansible_secrets.yaml
 config/openrc.sh
 config/rclone.conf
 ansible/hosts.cfg

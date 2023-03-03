@@ -21,11 +21,6 @@
   apt:
     update_cache: yes
 
-- name: install linux kernel headers
-  apt:
-    name: linux-headers-{{ ansible_kernel }}
-    state: latest
-
 - name: install required cuda packages
   apt:
     pkg:
@@ -33,8 +28,13 @@
       - glx-alternative-nvidia
       - nvidia-alternative
       - cuda
+      - build-essential
+      - dkms
     state: latest
     update_cache: true
+
+- name: install linux kernel headers (did not work with apt module)
+  ansible.builtin.shell: "apt install -y linux-headers-$(uname -r)"
 
 - name: reboot the server
   ansible.builtin.reboot:

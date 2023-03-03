@@ -91,8 +91,9 @@ __distributefiles() {
     # split the files into NUMVMS directories
     split -l $files_per_dir -d -a 1 <(printf '%s\n' "${files[@]}") vm-whisper-
 
-    find . -name "vm-whisper-*" -print0 | while IFS= read -r -d '' file
+    find . -name "vm-whisper-*" -printf '%P\0' | while IFS= read -r -d '' file
     do
+      echo "file $file"
       sub_dir="${BASEDIR}/${DST_DIR}/${file}"
       echo "subdir $sub_dir"
 
@@ -296,6 +297,10 @@ __doterraform() {
 __doansible() {
   # turn off host key checking for ansible
   export ANSIBLE_HOST_KEY_CHECKING=False
+  # copy the secrets yaml
+  cp "${BASEDIR}/${CONFIG_DIR}/${ANSIBLESECRETSTEMPLATE}" ${BASEDIR}/ansible/group_vars/all/${ANSIBLESECRETSTEMPLATE} \
+    || { echo "Error: could not copy template ${ANSIBLESECRETSTEMPLATE} to ${BASEDIR}/ansible/group_vars/all"; exit 1; }
+
   if [ $USE_GPU = "true" ]
   then
     # copy template to config for the ansible runtime
