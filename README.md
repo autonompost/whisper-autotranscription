@@ -18,6 +18,7 @@ This will let you bulk transcribe audio files using a cloud provider of your cho
 - [x] Upload/Download files from/to local filsystem
 - [x] Autodetect language
 - [x] GPU instance support with Nvidia Cuda
+- [x] use [whisperX](https://github.com/m-bain/whisperX) instead of whisper
 
 ## Version 1.1
 
@@ -31,13 +32,14 @@ This will let you bulk transcribe audio files using a cloud provider of your cho
 - [ ] automatic translation with DeepL to a specified language for transcripts
 - [ ] use rclone directly on the remote system without any local files
 - [ ] automatically create summaries for transcripts
+- [ ] [whisperX](https://github.com/m-bain/whisperX) diarization (currently not so great)
+- [ ] [Speaker Identification](https://github.com/lablab-ai/Whisper-transcription_and_diarization-speaker-identification-)
 - [ ] Supported Cloud Providers
   - [ ] Azure (GPU)
   - [ ] Linode (GPU) (not yet fully tested since I did not get any GPU instance access)
 
 ## Version 3
 
-- [ ] [Speaker Identification](https://github.com/lablab-ai/Whisper-transcription_and_diarization-speaker-identification-)
 - [ ] Use DeepL Write API to automatically correct grammar
 
 ## General Setup Steps
@@ -55,8 +57,21 @@ In order to use this project, first create your config files as described in the
 Usage: ./whisper-autotranscription.sh [-f CONFIGFILE] [-n NUMBER VMS] [-h]
   -f CONFIGFILE Specify a config file (optional. will use config/config.sh if not specified))
   -n NUMVMS     Specify a number of VMS to create (optional. will use 1 if not specified))
+  -m MODE       Specify the mode whisper|whisperx (optional. will use whisper if not specified)
   -h            Display this help message
 ```
+
+### whisperX Usage (Not recommended yet)
+
+There is also the possibility to use [whisperX](https://github.com/m-bain/whisperX) instead of `whisper`.
+
+For this you need a [huggingface account](https://huggingface.co) and a token.
+
+You will also need to accept the Terms and Conditions for [speaker-diarization](https://huggingface.co/pyannote/speaker-diarization) and [segmentation](https://huggingface.co/pyannote/segmentation).
+
+**whisperX only works with .wav files currently because of a bug in [python-soundfile](https://github.com/m-bain/whisperX/issues/41)**
+
+Copy `config/ansible_secrets.yaml_example` to `config/ansible_secrets.yaml` and add you token to `config/ansible_secrets.yaml`.
 
 ### Files
 
@@ -96,23 +111,23 @@ In the `templates/ansible_vars.yaml` file the model size can be set and also the
 
 **DO NOT CHANGE the variable for THREADS, this is done in the `whisper-autotranscription.sh` script which will get the value according to `instance_type`**
 
+**Change `whisper_parameters` if you want to optimize your whisper settings**.
+
 ```shell
 instance_threads: THREADS
 whisper_model_size: "medium"
 whisper_retry_count: 3
 whisper_retry_delay: 10
 file_directory: "/pathto/whisper-autotranscription/files_download"
+whisper_parameters: "--language de --extend_duration 0.1"
 ```
 
 ### secrets.sh
 
 The file `config/secrets.sh_example` needs to be copied over to `config/secrets.sh`.
 
-The file `config/ansible_secrets.yaml_example` needs to be copied over to `config/ansible_secrets.yaml`.
-
 ```shell
 cp config/secrets.sh_example config/secrets.sh
-cp config/ansible_secrets.yaml_example config/ansible_secrets.yaml
 ```
 
 Edit the file and add the API Token(s) of your Cloud Provider

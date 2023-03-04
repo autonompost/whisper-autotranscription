@@ -277,7 +277,7 @@ __doterraform() {
         || { echo "Error: gcloud auth is not ok"; exit 1; }
       terraform init || { echo "Error: terraform init failed"; exit 1; }
       terraform $tfmode -auto-approve -var-file="${BASEDIR}/${CONFIG_DIR}/${TFVARS}" \
-        -var-file="${BASEDIR}/${CONFIG_DIR}/${TFTEMPLATE}" || exit 1 
+        -var-file="${BASEDIR}/${CONFIG_DIR}/${TFTEMPLATE}" || exit 1
       ;;
     ovh)
       source ${CONFIG_DIR}/openrc.sh \
@@ -297,38 +297,35 @@ __doterraform() {
 __doansible() {
   # turn off host key checking for ansible
   export ANSIBLE_HOST_KEY_CHECKING=False
+
   # copy the secrets yaml
   cp "${BASEDIR}/${CONFIG_DIR}/${ANSIBLESECRETSTEMPLATE}" ${BASEDIR}/ansible/group_vars/all/${ANSIBLESECRETSTEMPLATE} \
     || { echo "Error: could not copy template ${ANSIBLESECRETSTEMPLATE} to ${BASEDIR}/ansible/group_vars/all"; exit 1; }
 
-  if [ $USE_GPU = "true" ]
-  then
-    # copy template to config for the ansible runtime
-    cp "${BASEDIR}/${TEMPLATE_DIR}/playbook_cuda.yaml" ${BASEDIR}/ansible/playbook.yaml \
-      || { echo "Error: could not copy ${BASEDIR}/${TEMPLATE_DIR}/playbook_cuda.yaml to ${BASEDIR}/ansible/playbook.yaml"; exit 1; }
-
-    # cd to ansible dir
-    [ -d ${BASEDIR}/ansible ] && cd $BASEDIR/ansible
-
-    # run ansible
-    ansible-playbook -i hosts.cfg playbook.yaml || exit 1
-  elif [ $USE_GPU = "false" ]
-  then
-    # copy template to config for the ansible runtime
-    cp "${BASEDIR}/${TEMPLATE_DIR}/playbook_default.yaml" ${BASEDIR}/ansible/playbook.yaml \
-      || { echo "Error: could not copy ${BASEDIR}/${TEMPLATE_DIR}/playbook_default.yaml to ${BASEDIR}/ansible/playbook.yaml"; exit 1; }
-
-    # cd to ansible dir
-    [ -d ${BASEDIR}/ansible ] && cd $BASEDIR/ansible
-
-    # run ansible
-    ansible-playbook -i hosts.cfg playbook.yaml || exit 1
-  fi
+  case $MODE in
+    whisper)
+      # copy template to config for the ansible runtime
+      cp "${BASEDIR}/${TEMPLATE_DIR}/playbook_whisper.yaml" ${BASEDIR}/ansible/playbook.yaml \
+        || { echo "Error: could not copy ${BASEDIR}/${TEMPLATE_DIR}/playbook_whisper.yaml to ${BASEDIR}/ansible/playbook.yaml"; exit 1; }
+      ansible-playbook -i hosts.cfg playbook.yaml || exit 1
+      ;;
+    whisperx)
+      # copy template to config for the ansible runtime
+      cp "${BASEDIR}/${TEMPLATE_DIR}/playbook_whisperx.yaml" ${BASEDIR}/ansible/playbook.yaml \
+        || { echo "Error: could not copy ${BASEDIR}/${TEMPLATE_DIR}/playbook_whisperx.yaml to ${BASEDIR}/ansible/playbook.yaml"; exit 1; }
+      ansible-playbook -i hosts.cfg playbook.yaml || exit 1
+      ;;
+    *)
+      echo "not supported mode: ${MODE}"
+      exit 1
+      ;;
+  esac
 }
 
 __main() {
   [ -z $CONFIGFILE ] && CONFIGFILE="config/config.sh" # check if config file is given
   [ -z $NUMVMS ] && NUMVMS=1 # default to 1 VM
+  [ -z $MODE ] && MODE="whisper" # default mode for transcription
   __checkreq # check if all required tools are installed
   [ $SSH_CREATE_KEY = "true" ] && __sshkeygen # create ssh key
   __distributefiles # distribute files to the correct directories
@@ -343,8 +340,9 @@ __main() {
 
 __show_help() {
     echo "Usage: $0 [-f CONFIGFILE] [-n NUMBER VMS] [-h]"
-    echo "  -f CONFIGFILE Specify a config file (optional. will use config/config.sh if not specified))"
-    echo "  -n NUMVMS     Specify a number of VMS to create (optional. will use 1 if not specified))"
+    echo "  -f CONFIGFILE Specify a config file (optional. will use config/config.sh if not specified)"
+    echo "  -n NUMVMS     Specify a number of VMS to create (optional. will use 1 if not specified)"
+    echo "  -m MODE       Specify the mode [whisper|whisperx] (optional. will use whisper if not specified)"
     echo "  -h            Display this help message"
 }
 
@@ -353,6 +351,8 @@ while getopts "f:n:h" opt; do
         f ) CONFIGFILE=$OPTARG
             ;;
         n ) NUMVMS=$OPTARG
+            ;;
+        m ) MODE=$OPTARG
             ;;
         h ) __show_help
             exit 0
@@ -372,4 +372,5 @@ then
   exec 1>&3 3>&- 2>&4 4>&-
 fi
 
-trap __exit_handler EXIT SIGINT SIGTERM SIGQUIT SIGABRT SIGKILL
+# trap ctrl-c and call ctrl_c()
+trap __exit_handler EXIT SIGINT SIGTERM SIGQUIT SIGABRT SIGKILL 

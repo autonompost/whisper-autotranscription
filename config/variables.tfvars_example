@@ -3,7 +3,7 @@
 ssh_public_key_name = "whisper-ssh-key"
 instance_name = "vm-whisper"
 
-# digitalocean  
+# digitalocean
 #region = "fra1"
 #instance_type = "s-1vcpu-2gb"
 #os_image = "ubuntu-22-04-x64"

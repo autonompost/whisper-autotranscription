@@ -1,6 +1,4 @@
 OVH_ENDPOINT=ovh-eu
-# instance_type has a GPU build in then set this to true
-USE_GPU="true"
 # cleanup all the files that have been uploaded to the remote vms
 CLEANUP="false"
 # use rclone true or false .. if rclone is set to true an rclone.conf needs to be created under config/rclone.conf
@@ -19,7 +17,7 @@ SSH_CREATE_KEY="true"
 SSH_CREATE_KEY_FORCE="false"
 # turn logging on or off
 LOGGING="true"
-# move output files to source folder after processing 
+# move output files to source folder after processing
 COPYOUTPUT="true"
 # local path of your files
 BASEDIR="/pathto/whisper-autotranscription"
@@ -33,7 +31,7 @@ TEMPLATE_DIR="templates"
 # terraform related variables
 TFVARS="variables.tfvars"
 TFTEMPLATE="variables_number_vms.tfvars"
-# ansible related variables 
+# ansible related variables
 ANSIBLETEMPLATE="ansible_vars.yaml"
 # obsidian path where to copy the files for your obsidian vault
 OBSIDIAN_DIR=""
