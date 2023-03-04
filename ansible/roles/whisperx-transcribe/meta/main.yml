@@ -1,7 +1,7 @@
 ---
 galaxy_info:
   author: autonompost
-  description: transcribe all audio files in a directory
+  description: transcribe all audio files in a directory using whisperX
   license: AGPL
   min_ansible_version: 2.1
   platforms:

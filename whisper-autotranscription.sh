@@ -164,6 +164,8 @@ __doobsidian() {
 __docopyouput() {
   # copy output files to the source directory
 
+  echo "__docopyouput called"
+
   # get all files from the output directory
   readarray -t download_array < <(find $BASEDIR/$DST_DIR/output -type f -exec basename {} \; | sed 's/\.[^.]*$//')
 
@@ -176,17 +178,19 @@ __docopyouput() {
   # iterate over the unique files and copy them to the source directory
   for i in "${download_unique_array[@]}"
   do
+      echo "looking for $i"
       for f in "${upload_array[@]}"
       do
-          if [[ "$f" =~ ${i}\.(mp3|wav)$ ]]
-          then
-              echo "found $i in $f"
-              dir=$(dirname "$f")
-              echo "target directory for all ${i} files: $dir"
+        echo "checking $f"
+        if [[ `echo $f | grep $i` ]]
+        then
+            echo "found $i in $f"
+            dir=$(dirname "$f")
+            echo "target directory for all ${i} files: $dir"
 
-              # copy all files with the same name to the source directory, overwrite only if newer
-              cp -u $BASEDIR/$DST_DIR/output/${i}.* "$dir"
-          fi
+            # copy all files with the same name to the source directory, overwrite only if newer
+            cp -u $BASEDIR/$DST_DIR/output/${i}.* "$dir"
+        fi
       done
   done
 }
@@ -278,7 +282,7 @@ __doterraform() {
         || { echo "Error: gcloud auth is not ok"; exit 1; }
       terraform init || { echo "Error: terraform init failed"; exit 1; }
       terraform $tfmode -auto-approve -var-file="${BASEDIR}/${CONFIG_DIR}/${TFVARS}" \
-        -var-file="${BASEDIR}/${CONFIG_DIR}/${TFTEMPLATE}" || exit 1
+        -var-file="${BASEDIR}/${CONFIG_DIR}/${TFTEMPLATE}" || echo "Error: terraform $tfmode failedw with $?"
       ;;
     ovh)
       cd $BASEDIR || { echo "Error: could not chdir to ${BASEDIR}"; exit 1; }
@@ -287,7 +291,7 @@ __doterraform() {
       cd ${BASEDIR}/$CLOUDPROVIDER || { echo "Error: could not chdir to ${CLOUDPROVIDER}"; exit 1; }
       terraform init || { echo "Error: terraform init failed"; exit 1; }
       terraform $tfmode -auto-approve -var-file="${BASEDIR}/${CONFIG_DIR}/${TFVARS}" \
-        -var-file="${BASEDIR}/${CONFIG_DIR}/${TFTEMPLATE}" || exit 1
+        -var-file="${BASEDIR}/${CONFIG_DIR}/${TFTEMPLATE}" || echo "Error: terraform $tfmode failedw with $?"
       ;;
     *)
       echo "not supported cloud provider: ${CLOUDPROVIDER}"
@@ -374,7 +378,7 @@ __main
 # stop logging
 if [ $LOGGING = "true" ]
 then
-  exec 1>&3 3>&- 2>&4 4>&-
+  exec 1>&2 2>&-
 fi
 
 # trap ctrl-c and call ctrl_c()

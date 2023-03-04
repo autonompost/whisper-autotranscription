@@ -1,4 +1,4 @@
-# Autotranscription with Whisper (Work in Progress - Do not use yet)
+# Autotranscription with Whisper
 
 
 This will let you bulk transcribe audio files using a cloud provider of your choice. The project is using `terraform` to create a number of instances and uses `ansible` to configure and transcribe the files in parallel using whisper.
@@ -140,6 +140,8 @@ For `GCP` use `gcloud auth login` in order to use terraform.
 ### Version 1.1
 
 - [ ] more CLI script parameters to reduce the config file mess
+- [ ] option for maximum number of files to transcribe
+- [ ] upload only files from files_upload that have not been transcribed
 - [ ] Supported Cloud Providers
   - [ ] AWS (GPU)
 
