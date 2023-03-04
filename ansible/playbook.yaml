@@ -18,9 +18,9 @@
   roles:
     - role: sysupdate
     - role: rclone
-    - role: whisperx-packages
+    - role: whisper-packages
     - role: cuda
     - role: swapspace
     - role: copyfiles
-    - role: whisperx-transcribe
+    - role: whisper-transcribe
     - role: downloadfiles

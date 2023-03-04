@@ -43,3 +43,12 @@
     msg: "Reboot initiated by Ansible"
     connect_timeout: 5
     reboot_timeout: 300
+
+- name: check if at least one Nvidia device is usable
+  shell: nvidia-smi --query-gpu=count --format=csv,noheader
+  register: nvidia_output
+  ignore_errors: true
+
+- fail:
+    msg: "No usable Nvidia device found"
+  when: nvidia_output.rc != 0 or nvidia_output.stdout == "0"

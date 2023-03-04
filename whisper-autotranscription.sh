@@ -242,6 +242,7 @@ __dogetcpu() {
 
 __doterraform() {
   tfmode=$1 # apply or destroy
+  echo "terraform mode - $tfmode"
 
   # copy template to config for the terraform runtime
   cp "${BASEDIR}/${TEMPLATE_DIR}/${TFTEMPLATE}" ${BASEDIR}/${CONFIG_DIR}/${TFTEMPLATE} \
@@ -280,6 +281,7 @@ __doterraform() {
         -var-file="${BASEDIR}/${CONFIG_DIR}/${TFTEMPLATE}" || exit 1
       ;;
     ovh)
+      cd $BASEDIR || { echo "Error: could not chdir to ${BASEDIR}"; exit 1; }
       source ${CONFIG_DIR}/openrc.sh \
         || { echo "Error: could source openrc.sh openstack config for ${CLOUDPROVIDER}"; exit 1; }
       cd ${BASEDIR}/$CLOUDPROVIDER || { echo "Error: could not chdir to ${CLOUDPROVIDER}"; exit 1; }
@@ -307,13 +309,15 @@ __doansible() {
       # copy template to config for the ansible runtime
       cp "${BASEDIR}/${TEMPLATE_DIR}/playbook_whisper.yaml" ${BASEDIR}/ansible/playbook.yaml \
         || { echo "Error: could not copy ${BASEDIR}/${TEMPLATE_DIR}/playbook_whisper.yaml to ${BASEDIR}/ansible/playbook.yaml"; exit 1; }
-      ansible-playbook -i hosts.cfg playbook.yaml || exit 1
+      cd ${BASEDIR}/ansible || { echo "Error: could not chdir to ${BASEDIR}/ansible"; exit 1; }
+      ansible-playbook -i hosts.cfg playbook.yaml || echo "Error: ansible playbook had some tasks that failed"
       ;;
     whisperx)
       # copy template to config for the ansible runtime
       cp "${BASEDIR}/${TEMPLATE_DIR}/playbook_whisperx.yaml" ${BASEDIR}/ansible/playbook.yaml \
         || { echo "Error: could not copy ${BASEDIR}/${TEMPLATE_DIR}/playbook_whisperx.yaml to ${BASEDIR}/ansible/playbook.yaml"; exit 1; }
-      ansible-playbook -i hosts.cfg playbook.yaml || exit 1
+      cd ${BASEDIR}/ansible || { echo "Error: could not chdir to ${BASEDIR}/ansible"; exit 1; }
+      ansible-playbook -i hosts.cfg playbook.yaml || echo "Error: ansible playbook had some tasks that failed"
       ;;
     *)
       echo "not supported mode: ${MODE}"
@@ -332,6 +336,7 @@ __main() {
   __doterraform apply # create the VMs with terraform
   __dogetcpu # get cpu info for whisper threading
   [ $ANSIBLE = "true" ] && __doansible # run ansible
+  echo "here should now run terraform destroy"
   [ $TFDESTROY = "true" ] && __doterraform destroy # destroy the VMs with terraform
   [ $COPYOUTPUT = "true" ] && __docopyouput # copy output files to output dir
   [ $OBSIDIAN = "true" ] && __doobsidian # run obsidian
@@ -346,7 +351,7 @@ __show_help() {
     echo "  -h            Display this help message"
 }
 
-while getopts "f:n:h" opt; do
+while getopts "f:n:m:h" opt; do
     case ${opt} in
         f ) CONFIGFILE=$OPTARG
             ;;
