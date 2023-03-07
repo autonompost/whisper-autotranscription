@@ -89,6 +89,8 @@ file_directory: "/pathto/whisper-autotranscription/files_download"
 whisper_parameters: "--language de --extend_duration 0.1"
 ```
 
+If you are unsure what parameters for `whisper` exist, install [whisper](https://github.com/openai/whisper) on a system and execute `whisper --help`.
+
 ### secrets.sh
 
 The file `config/secrets.sh_example` needs to be copied over to `config/secrets.sh`.
@@ -160,6 +162,7 @@ For `GCP` use `gcloud auth login` in order to use terraform.
 ## Version 3
 
 - [ ] Use DeepL Write API to automatically correct grammar
+- [ ] Create Cloud Images with Packer for faster deployment
 
 ## Contributing
 

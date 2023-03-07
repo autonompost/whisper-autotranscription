@@ -7,13 +7,14 @@ logs/**
 config/config.sh
 config/secrets.sh
 config/ansible_secrets.yaml
-ansible/group_vars/all/ansible_secrets.yaml
 config/openrc.sh
 config/rclone.conf
-ansible/hosts.cfg
+config/variables.tfvars
+ansible/group_vars/all/ansible_secrets.yaml
+ansible/playbook.yaml
 ansible/group_vars/all/ansible_vars.yaml
+ansible/hosts.cfg
 files/**
 files_download/**
 files_upload/***
-config/variables.tfvars
 test.sh

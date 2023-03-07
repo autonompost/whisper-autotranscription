@@ -35,3 +35,4 @@ TFTEMPLATE="variables_number_vms.tfvars"
 ANSIBLETEMPLATE="ansible_vars.yaml"
 # obsidian path where to copy the files for your obsidian vault
 OBSIDIAN_DIR=""
+
