@@ -36,3 +36,7 @@ variable "ssh_public_key_name" {
   description = "ssh public key name"
   type = string
 }
+variable "spot_price" {
+  description = "the maximum spot price for the instance request"
+  type = string
+}

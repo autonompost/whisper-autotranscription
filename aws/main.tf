@@ -51,12 +51,13 @@ resource "aws_spot_instance_request" "default" {
   ami = "${var.os_image}"
   instance_type = "${var.instance_type}"
 
-  #spot_price = "${var.spot_price}"
+  spot_price = var.spot_price
   wait_for_fulfillment = true
   spot_type = "one-time"
   key_name = "${aws_key_pair.default.key_name}"
   iam_instance_profile = "${aws_iam_instance_profile.default.name}"
-  
+  #associate_public_ip_address = true
+
   tags = {
     Name = "whisper"
   }
@@ -75,6 +76,13 @@ resource "aws_spot_instance_request" "default" {
     private_key = "${file("../id_rsa")}"
     host = "${aws_spot_instance_request.default.public_ip}"
   }
+}
+
+# aws eip for spot instance
+resource "aws_eip" "default" {
+  vpc = true
+  instance = aws_spot_instance_request.default.id
+  depends_on = [aws_spot_instance_request.default]
 }
 
 resource "aws_vpc" "default" {
@@ -101,6 +109,11 @@ resource "aws_network_interface" "default" {
   tags = {
     Name = "whisper"
   }
+}
+
+resource "aws_eip_association" "default" {
+  instance_id   = aws_spot_instance_request.default.id
+  allocation_id = aws_eip.default.id
 }
 
 resource "aws_security_group" "default" {

@@ -348,7 +348,7 @@ __main() {
 }
 
 __show_help() {
-    echo "Usage: $0 [-f CONFIGFILE] [-n NUMBER VMS] [-h]"
+    echo "Usage: $0 [-f CONFIGFILE] [-n NUMBER VMS] [-m MODE] [-h]"
     echo "  -f CONFIGFILE Specify a config file (optional. will use config/config.sh if not specified)"
     echo "  -n NUMVMS     Specify a number of VMS to create (optional. will use 1 if not specified)"
     echo "  -m MODE       Specify the mode [whisper|whisperx] (optional. will use whisper if not specified)"

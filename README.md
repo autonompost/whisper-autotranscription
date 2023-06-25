@@ -21,7 +21,7 @@ This project has been testing with the following versions:
 In order to use this project, first create your config files as described in the section below.
 
 ```shell
-Usage: ./whisper-autotranscription.sh [-f CONFIGFILE] [-n NUMBER VMS] [-h]
+Usage: ./whisper-autotranscription.sh [-f CONFIGFILE] [-n NUMBER VMS] [-m MODE] [-h]
   -f CONFIGFILE Specify a config file (optional. will use config/config.sh if not specified))
   -n NUMVMS     Specify a number of VMS to create (optional. will use 1 if not specified))
   -m MODE       Specify the mode whisper|whisperx (optional. will use whisper if not specified)
