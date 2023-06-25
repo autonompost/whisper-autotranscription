@@ -1,6 +1,6 @@
 - name: Add specified repository into sources list
   ansible.builtin.apt_repository:
-    repo: deb http://http.us.debian.org/debian stable main contrib non-free
+    repo: deb http://http.us.debian.org/debian bullseye main contrib non-free
     state: present
 
 - name: download nvidia cuda keyring
