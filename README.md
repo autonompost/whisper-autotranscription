@@ -13,9 +13,9 @@ Also, some general remarks can be found here [testing](./testing.md).
 
 This project has been testing with the following versions:
 
-- Terraform 1.3.9
-- Ansible 2.13.4
-- Python 3.10.10
+- Terraform 1.5.7
+- Ansible 2.16.0 (9.0.x)
+- Python 3.11.6
 - openstack client 6.0.0
 
 In order to use this project, first create your config files as described in the section below.
