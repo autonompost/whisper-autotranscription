@@ -13,15 +13,15 @@ Also, some general remarks can be found here [testing](./testing.md).
 
 This project has been testing with the following versions:
 
-- Terraform 1.3.9
-- Ansible 2.13.4
-- Python 3.10.10
+- Terraform 1.5.7
+- Ansible 2.16.0 (9.0.x)
+- Python 3.11.6
 - openstack client 6.0.0
 
 In order to use this project, first create your config files as described in the section below.
 
 ```shell
-Usage: ./whisper-autotranscription.sh [-f CONFIGFILE] [-n NUMBER VMS] [-h]
+Usage: ./whisper-autotranscription.sh [-f CONFIGFILE] [-n NUMBER VMS] [-m MODE] [-h]
   -f CONFIGFILE Specify a config file (optional. will use config/config.sh if not specified))
   -n NUMVMS     Specify a number of VMS to create (optional. will use 1 if not specified))
   -m MODE       Specify the mode whisper|whisperx (optional. will use whisper if not specified)
@@ -88,6 +88,8 @@ whisper_retry_delay: 10
 file_directory: "/pathto/whisper-autotranscription/files_download"
 whisper_parameters: "--language de --extend_duration 0.1"
 ```
+
+If you are unsure what parameters for `whisper` exist, install [whisper](https://github.com/openai/whisper) on a system and execute `whisper --help`.
 
 ### secrets.sh
 
@@ -160,6 +162,7 @@ For `GCP` use `gcloud auth login` in order to use terraform.
 ## Version 3
 
 - [ ] Use DeepL Write API to automatically correct grammar
+- [ ] Create Cloud Images with Packer for faster deployment
 
 ## Contributing
 
