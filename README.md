@@ -13,15 +13,15 @@ Also, some general remarks can be found here [testing](./testing.md).
 
 This project has been testing with the following versions:
 
-- Terraform 1.3.9
-- Ansible 2.13.4
-- Python 3.10.10
+- Terraform 1.5.7
+- Ansible 2.16.0 (9.0.x)
+- Python 3.11.6
 - openstack client 6.0.0
 
 In order to use this project, first create your config files as described in the section below.
 
 ```shell
-Usage: ./whisper-autotranscription.sh [-f CONFIGFILE] [-n NUMBER VMS] [-h]
+Usage: ./whisper-autotranscription.sh [-f CONFIGFILE] [-n NUMBER VMS] [-m MODE] [-h]
   -f CONFIGFILE Specify a config file (optional. will use config/config.sh if not specified))
   -n NUMVMS     Specify a number of VMS to create (optional. will use 1 if not specified))
   -m MODE       Specify the mode whisper|whisperx (optional. will use whisper if not specified)
@@ -89,6 +89,8 @@ file_directory: "/pathto/whisper-autotranscription/files_download"
 whisper_parameters: "--language de --extend_duration 0.1"
 ```
 
+If you are unsure what parameters for `whisper` exist, install [whisper](https://github.com/openai/whisper) on a system and execute `whisper --help`.
+
 ### secrets.sh
 
 The file `config/secrets.sh_example` needs to be copied over to `config/secrets.sh`.
@@ -141,25 +143,25 @@ For `GCP` use `gcloud auth login` in order to use terraform.
 
 - [ ] more CLI script parameters to reduce the config file mess
 - [ ] option for maximum number of files to transcribe
-- [ ] upload only files from files_upload that have not been transcribed
-- [ ] Supported Cloud Providers
-  - [ ] AWS (GPU)
 
 ### Version 2
 
 - [ ] [Obsidian audio-notes](https://github.com/jjmaldonis/obsidian-audio-notes) plugin support
 - [ ] automatic translation with DeepL to a specified language for transcripts
+- [ ] upload only files from files_upload that have not been transcribed
 - [ ] use rclone directly on the remote system without any local files
 - [ ] automatically create summaries for transcripts
 - [ ] [whisperX](https://github.com/m-bain/whisperX) diarization (currently not so great)
 - [ ] [Speaker Identification](https://github.com/lablab-ai/Whisper-transcription_and_diarization-speaker-identification-)
-- [ ] Supported Cloud Providers
-  - [ ] Azure (GPU)
-  - [ ] Linode (GPU) (not yet fully tested since I did not get any GPU instance access)
+- [x] Supported Cloud Providers
+  - [x] Azure (GPU) (wont implement - feel free to fork)
+  - [x] Linode (GPU) (not yet fully tested since I did not get any GPU instance access) (wont implement - feel free to fork)
+  - [x] AWS (GPU) (wont implement - feel free to fork)
 
 ## Version 3
 
 - [ ] Use DeepL Write API to automatically correct grammar
+- [ ] Create Cloud Images with Packer for faster deployment
 
 ## Contributing
 

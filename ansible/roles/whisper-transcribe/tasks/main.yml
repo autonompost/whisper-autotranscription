@@ -15,6 +15,8 @@
   command: "ls -1 {{ remote_directory }}/{{ remote_hostname }}/"
   register: files
 
+# this should be a block statement and include the downloadfiles task which should empty the output directory
+# https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_blocks.html
 - name: transcribe all audio files
   command: "whisper {{ remote_directory }}/{{ remote_hostname }}/{{ item }} --model {{ whisper_model_size }} --threads {{ instance_threads }} --output_dir {{ remote_output_directory }} {{ whisper_parameters }}"
   loop: "{{ files.stdout_lines }}"

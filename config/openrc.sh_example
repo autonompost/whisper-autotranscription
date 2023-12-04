@@ -14,20 +14,35 @@ export OS_PROJECT_DOMAIN_NAME=${OS_PROJECT_DOMAIN_NAME:-"Default"}
 
 # With the addition of Keystone we have standardized on the term **tenant**
 # as the entity that owns the resources.
-export OS_TENANT_ID=
-export OS_TENANT_NAME=""
+export OS_TENANT_ID="your-tenant-id"
+export OS_TENANT_NAME="your-tenant-name"
 
-# In addition to the owning entity (tenant), openstack stores the entity
-# performing the action as the **user**.
-export OS_USERNAME=""
+# commnented out because of https://github.com/autonompost/whisper-autotranscription/issues/1 
+### In addition to the owning entity (tenant), openstack stores the entity
+### performing the action as the **user**.
+##export OS_USERNAME=""
+##
+### With Keystone you pass the keystone password.
+##echo "Please enter your OpenStack Password: "
+##read -sr OS_PASSWORD_INPUT
+##export OS_PASSWORD=$OS_PASSWORD_INPUT
+
+export OS_USERNAME="user-your-username"
 
 # With Keystone you pass the keystone password.
-echo "Please enter your OpenStack Password: "
-read -sr OS_PASSWORD_INPUT
-export OS_PASSWORD=$OS_PASSWORD_INPUT
+#echo "Please enter your OpenStack Password: "
+#read -sr OS_PASSWORD_INPUT
+#export OS_PASSWORD=$OS_PASSWORD_INPUT
+export OS_PASSWORD="user-your-password"
 
 # If your configuration has multiple regions, we set that information here.
 # OS_REGION_NAME is optional and only valid in certain environments.
-export OS_REGION_NAME="GRA9"
+export OS_REGION_NAME="BHS5"
+
+# commnented out because of other default region being used by the author
+### If your configuration has multiple regions, we set that information here.
+### OS_REGION_NAME is optional and only valid in certain environments.
+##export OS_REGION_NAME="GRA9"
+
 # Don't leave a blank variable, unset it if it was empty
 if [ -z "$OS_REGION_NAME" ]; then unset OS_REGION_NAME; fi
