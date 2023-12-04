@@ -143,21 +143,20 @@ For `GCP` use `gcloud auth login` in order to use terraform.
 
 - [ ] more CLI script parameters to reduce the config file mess
 - [ ] option for maximum number of files to transcribe
-- [ ] upload only files from files_upload that have not been transcribed
-- [ ] Supported Cloud Providers
-  - [ ] AWS (GPU)
 
 ### Version 2
 
 - [ ] [Obsidian audio-notes](https://github.com/jjmaldonis/obsidian-audio-notes) plugin support
 - [ ] automatic translation with DeepL to a specified language for transcripts
+- [ ] upload only files from files_upload that have not been transcribed
 - [ ] use rclone directly on the remote system without any local files
 - [ ] automatically create summaries for transcripts
 - [ ] [whisperX](https://github.com/m-bain/whisperX) diarization (currently not so great)
 - [ ] [Speaker Identification](https://github.com/lablab-ai/Whisper-transcription_and_diarization-speaker-identification-)
-- [ ] Supported Cloud Providers
-  - [ ] Azure (GPU)
-  - [ ] Linode (GPU) (not yet fully tested since I did not get any GPU instance access)
+- [x] Supported Cloud Providers
+  - [x] Azure (GPU) (wont implement - feel free to fork)
+  - [x] Linode (GPU) (not yet fully tested since I did not get any GPU instance access) (wont implement - feel free to fork)
+  - [x] AWS (GPU) (wont implement - feel free to fork)
 
 ## Version 3
 
