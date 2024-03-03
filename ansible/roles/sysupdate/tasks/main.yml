@@ -1,7 +1,15 @@
-- name: Perform a dist-upgrade.
+---
+# see also https://github.com/autonompost/whisper-autotranscription/issues/10
+- name: remove google cloud repo
+  ansible.builtin.file:
+    path: /etc/apt/sources.list.d/google-cloud.list
+    state: absent
+
+- name: apt update
   ansible.builtin.apt:
-    upgrade: dist
-    update_cache: yes
+    upgrade: yes
+    update_cache: true
+    cache_valid_time: 86400 # 1 day
 
 - name: Check if a reboot is required.
   ansible.builtin.stat:
